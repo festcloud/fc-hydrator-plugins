@@ -45,6 +45,7 @@
     <module>solrsearch-plugins</module>
     <module>spark-plugins</module>
     <module>transform-plugins</module>
+    <module>neo4j-plugins</module>
   </modules>
 
   <licenses>
@@ -1049,7 +1050,7 @@
         <module>azure</module>
       </modules>
     </profile>
-    <profile> 
+    <profile>
       <id>skipTests</id>
       <build>
        <plugins>

@@ -1,0 +1,11 @@
+{
+  "ElementName": {
+    "Id": "3de87cb7-b7fb-11ea-82ff-97299e06153c",
+    "PropertyName": "Random Value",
+    "OtherProperty": 32,
+    "ParentObject": {
+      "Id": "1abce5e1-b7fb-11ea-82ff-97299e06153c",
+      "ParentProperty": "Other Value"
+    }
+  }
+}

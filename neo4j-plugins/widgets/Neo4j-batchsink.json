@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "spec-version": "1.5"
+  },
+  "display-name": "Neo4j",
+  "configuration-groups": [
+    {
+      "label": "Neo4j Configuration",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Connection URL",
+          "name": "neo4jURL"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Username",
+          "name": "neo4jUser"
+        },
+        {
+          "widget-type": "password",
+          "label": "Password",
+          "name": "neo4jPassword"
+        }
+      ]
+    }
+  ],
+  "outputs": [ ],
+  "jump-config": {
+    "datasets": [
+      {
+        "ref-property-name": "referenceName"
+      }
+    ]
+  }
+}
