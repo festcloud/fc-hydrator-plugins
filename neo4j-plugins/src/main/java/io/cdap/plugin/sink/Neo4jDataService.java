@@ -99,7 +99,7 @@ public class Neo4jDataService {
      *          PropertyName: 'Random Value', OtherProperty: '32'})
      * RETURN m
      */
-    public Node createNode(StructuredRecord input, String idPropertyName) {
+    public Node createNode(StructuredRecord input) {
         Objects.requireNonNull(input.getSchema());
         Objects.requireNonNull(input.getSchema().getFields());
         StringBuilder queryBuilder = new StringBuilder("MERGE (m {");

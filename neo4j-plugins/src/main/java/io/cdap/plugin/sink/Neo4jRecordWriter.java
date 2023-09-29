@@ -23,6 +23,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.types.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,31 +34,31 @@ import java.util.List;
  */
 public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, NullWritable> {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jRecordWriter.class);
+    private static final String ID = "UID";
 
     private final Session session;
+    private final Neo4jDataService dataService;
 
     public Neo4jRecordWriter(Session session) {
         this.session = session;
+        dataService = new Neo4jDataService(session);
     }
 
     @Override
     public void write(StructuredRecord structuredRecord, NullWritable nullWritable) {
-        LOG.info("Write into Neo4j");
-        List<Schema.Field> fields = structuredRecord.getSchema().getFields();
-        StringBuilder querySB = new StringBuilder("CREATE (a:TODO) SET ");
-        for (Schema.Field field : fields) {
-            if (field.getSchema().isSimpleOrNullableSimple()) {
-                Object value = structuredRecord.get(field.getName());
-                querySB.append("a.").append(field.getName()).append(" = ").append(value);
+        String uid = structuredRecord.get(ID);
+        Node existedNode = dataService.getUniqueNodeByProperty(ID, uid);
+        if (existedNode != null) {
+            Node updatedNode = dataService.updateNode(ID, uid, structuredRecord);
+            if (updatedNode == null) {
+                LOG.error("Node with id {} was not updated", uid);
+            }
+        } else {
+            Node newNode = dataService.createNode(structuredRecord);
+            if (newNode == null) {
+                LOG.error("Node creation process has failed");
             }
         }
-        querySB.append(" RETURN id(a)");
-        session.writeTransaction(tx -> {
-            Result result = tx.run(querySB.toString());
-            Long nodeId = result.single().get(0).asLong();
-            LOG.info("Created node with id: {}", nodeId);
-            return nodeId;
-        });
     }
 
     @Override
