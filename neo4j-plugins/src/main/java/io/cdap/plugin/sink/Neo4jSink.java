@@ -47,7 +47,7 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 @Name("Neo4j")
 @Description("Neo4j Sink")
 @Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = Neo4jConnector.NAME)})
-public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, NullWritable> {
+public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, StructuredRecord> {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jSink.class);
 
     private final Neo4jSinkConfig config;

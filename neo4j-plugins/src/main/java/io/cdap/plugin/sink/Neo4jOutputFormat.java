@@ -38,12 +38,12 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 /**
  * Neo4j CDAP Sink output format
  */
-public class Neo4jOutputFormat extends OutputFormat<StructuredRecord, NullWritable> {
+public class Neo4jOutputFormat extends OutputFormat<StructuredRecord, StructuredRecord> {
 
     private Driver driver;
 
     @Override
-    public RecordWriter<StructuredRecord, NullWritable> getRecordWriter(TaskAttemptContext taskAttemptContext) {
+    public RecordWriter<StructuredRecord, StructuredRecord> getRecordWriter(TaskAttemptContext taskAttemptContext) {
         Configuration configuration = taskAttemptContext.getConfiguration();
         return new Neo4jRecordWriter(getSession(configuration));
     }

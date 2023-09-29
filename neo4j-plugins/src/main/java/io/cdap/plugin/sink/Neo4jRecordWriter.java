@@ -17,22 +17,17 @@
 package io.cdap.plugin.sink;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
-import io.cdap.cdap.api.data.schema.Schema;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.types.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 /**
  * Neo4j CDAP Sink record writer
  */
-public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, NullWritable> {
+public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, StructuredRecord> {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jRecordWriter.class);
     private static final String ID = "UID";
 
@@ -45,16 +40,16 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, NullWritab
     }
 
     @Override
-    public void write(StructuredRecord structuredRecord, NullWritable nullWritable) {
-        String uid = structuredRecord.get(ID);
+    public void write(StructuredRecord key, StructuredRecord value) {
+        String uid = value.get(ID);
         Node existedNode = dataService.getUniqueNodeByProperty(ID, uid);
         if (existedNode != null) {
-            Node updatedNode = dataService.updateNode(ID, uid, structuredRecord);
+            Node updatedNode = dataService.updateNode(ID, uid, value);
             if (updatedNode == null) {
                 LOG.error("Node with id {} was not updated", uid);
             }
         } else {
-            Node newNode = dataService.createNode(structuredRecord);
+            Node newNode = dataService.createNode(value);
             if (newNode == null) {
                 LOG.error("Node creation process has failed");
             }
