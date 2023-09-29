@@ -52,7 +52,9 @@ public class Neo4jDataService {
      * @return Node by unique identifier or null if no Node found or if more then one Node was returned
      */
     public Node getUniqueNodeByProperty(String propertyName, String propertyValue) {
-        Result result = session.run("MATCH (n {" + propertyName + ": '" + propertyValue + "'}) RETURN n");
+        String query = "MATCH (n {" + propertyName + ": '" + propertyValue + "'}) RETURN n";
+        LOG.info(query);
+        Result result = session.run(query);
         if (result.hasNext()) {
             if (result.list().size() > 1) {
                 LOG.warn("Returned more than one result");
@@ -100,18 +102,21 @@ public class Neo4jDataService {
      * RETURN m
      */
     public Node createNode(StructuredRecord input) {
+        LOG.info("Create new node from: {}", input.toString());
         Objects.requireNonNull(input.getSchema());
         Objects.requireNonNull(input.getSchema().getFields());
         StringBuilder queryBuilder = new StringBuilder("MERGE (m {");
         for (Schema.Field field : input.getSchema().getFields()) {
+            LOG.info("Field: {}", field.toString());
             if (Schema.Type.RECORD.equals(field.getSchema().getType())) {
                 // TODO: skipped for the time being
             } else if (field.getSchema().getType().isSimpleType()) {
                 queryBuilder.append(field.getName()).append(":");
+                String fieldName = input.get(field.getName());
                 if (NUMERIC_TYPES.contains(field.getSchema().getType())) {
-                    queryBuilder.append(input.get(field.getName()).toString());
+                    queryBuilder.append(fieldName);
                 } else {
-                    queryBuilder.append("'").append(input.get(field.getName()).toString()).append("'");
+                    queryBuilder.append("'").append(fieldName).append("'");
                 }
             }
         }
