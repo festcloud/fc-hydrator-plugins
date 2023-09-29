@@ -16,7 +16,6 @@
 
 package io.cdap.plugin.sink;
 
-import com.google.gson.Gson;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Metadata;
 import io.cdap.cdap.api.annotation.MetadataProperty;
@@ -34,8 +33,12 @@ import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+
+import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
+import static io.cdap.plugin.common.Neo4jConstants.URL;
+import static io.cdap.plugin.common.Neo4jConstants.USER;
 
 /**
  * Neo4j CDAP Sink
@@ -74,7 +77,6 @@ public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, Nul
     }
 
     private static class Neo4jOutputFormatProvider implements OutputFormatProvider {
-        private static final Gson GSON = new Gson();
         private final Neo4jSinkConfig config;
 
         Neo4jOutputFormatProvider(Neo4jSinkConfig config) {
@@ -88,7 +90,11 @@ public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, Nul
 
         @Override
         public Map<String, String> getOutputFormatConfiguration() {
-            return Collections.singletonMap("http.sink.config", GSON.toJson(config));
+            Map<String, String> configMap = new HashMap<>();
+            configMap.put(URL, config.getNeo4jUrl());
+            configMap.put(USER, config.getNeo4jUser());
+            configMap.put(PASSWORD, config.getNeo4jPassword());
+            return configMap;
         }
     }
 }
