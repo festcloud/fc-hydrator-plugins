@@ -19,6 +19,7 @@ package io.cdap.plugin.sink;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.types.Node;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, Structured
         String uid = value.get(ID);
         LOG.info("Start processing element with id: {}", uid);
         LOG.info("Just for fun: {}", (String) key.get(ID));
-        Node existedNode = dataService.getUniqueNodeByProperty(ID, uid);
+        Record existedNode = dataService.getUniqueNodeByProperty(ID, uid);
         if (existedNode != null) {
             Node updatedNode = dataService.updateNode(ID, uid, value);
             if (updatedNode == null) {
