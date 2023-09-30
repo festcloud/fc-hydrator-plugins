@@ -59,7 +59,7 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
  */
 @Plugin(type = Connector.PLUGIN_TYPE)
 @Name(Neo4jConnector.NAME)
-@Category("Cloud Data Fabric")
+@Category("Database")
 @Description("Connection to access data in Neo4j.")
 public class Neo4jConnector implements Connector {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jConnector.class);
