@@ -2,28 +2,53 @@
   "metadata": {
     "spec-version": "1.5"
   },
-  "display-name": "Neo4j",
+  "display-name": "Neo4j xx",
   "configuration-groups": [
     {
-      "label": "Neo4j Configuration",
+      "label": "Basic",
       "properties": [
         {
-          "widget-type": "textbox",
-          "label": "Connection URL",
-          "name": "neo4jURL"
+          "widget-type": "plugin-list",
+          "label": "JDBC Driver name",
+          "name": "jdbcPluginName",
+          "widget-attributes": {
+            "plugin-type": "Neo4j"
+          }
         },
         {
           "widget-type": "textbox",
+          "label": "Connection URL",
+          "name": "url"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "database",
+          "name": "database"
+        }
+      ]
+    },
+    {
+      "label": "Credentials",
+      "properties": [
+        {
+          "widget-type": "textbox",
           "label": "Username",
-          "name": "neo4jUser"
+          "name": "user"
         },
         {
           "widget-type": "password",
           "label": "Password",
-          "name": "neo4jPassword"
+          "name": "password"
         }
       ]
     }
   ],
-  "outputs": [ ]
+  "outputs": [],
+  "jump-config": {
+    "datasets": [
+      {
+        "ref-property-name": "referenceName"
+      }
+    ]
+  }
 }
