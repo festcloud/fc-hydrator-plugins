@@ -21,7 +21,6 @@ import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.etl.api.batch.BatchSink;
-import io.cdap.cdap.etl.api.batch.BatchSource;
 import io.cdap.cdap.etl.api.connector.BrowseDetail;
 import io.cdap.cdap.etl.api.connector.BrowseEntity;
 import io.cdap.cdap.etl.api.connector.BrowseEntityPropertyValue;
@@ -31,8 +30,10 @@ import io.cdap.cdap.etl.api.connector.ConnectorContext;
 import io.cdap.cdap.etl.api.connector.ConnectorSpec;
 import io.cdap.cdap.etl.api.connector.ConnectorSpecRequest;
 import io.cdap.cdap.etl.api.connector.PluginSpec;
+import io.cdap.cdap.etl.api.connector.SampleType;
 import io.cdap.cdap.etl.api.validation.ValidationException;
 import io.cdap.cdap.etl.api.validation.ValidationFailure;
+import io.cdap.plugin.common.ConfigUtil;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -49,11 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
-import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
-import static io.cdap.plugin.common.Neo4jConstants.URL;
-import static io.cdap.plugin.common.Neo4jConstants.USER;
-
 /**
  * Neo4j CDAP Connector
  */
@@ -62,8 +58,8 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 @Category("Database")
 @Description("Connection to access data in Neo4j.")
 public class Neo4jConnector implements Connector {
-    private static final Logger LOG = LoggerFactory.getLogger(Neo4jConnector.class);
     public static final String NAME = "Neo4j";
+    private static final Logger LOG = LoggerFactory.getLogger(Neo4jConnector.class);
     private static final String QUERY_NODES_COUNT = "MATCH (n) RETURN count(*)";
     private static final String QUERY_LABELS_COUNT = "MATCH (n) RETURN DISTINCT labels(n) as label, count(*) as count";
 
@@ -117,13 +113,12 @@ public class Neo4jConnector implements Connector {
     public ConnectorSpec generateSpec(ConnectorContext context, ConnectorSpecRequest path) throws IOException {
         LOG.info("GenericSpec function");
         Map<String, String> properties = new HashMap<>();
-        properties.put(URL, config.getUrl());
-        properties.put(USER, config.getUser());
-        properties.put(PASSWORD, config.getPassword());
-        properties.put(DATABASE, config.getDatabase());
+        properties.put(ConfigUtil.NAME_USE_CONNECTION, "true");
+        properties.put(ConfigUtil.NAME_CONNECTION, path.getConnectionWithMacro());
         return ConnectorSpec.builder()
                 .addRelatedPlugin(new PluginSpec(NAME, BatchSink.PLUGIN_TYPE, properties))
+                .addSupportedSampleType(SampleType.RANDOM)
+                .addSupportedSampleType(SampleType.STRATIFIED)
                 .build();
-
     }
 }

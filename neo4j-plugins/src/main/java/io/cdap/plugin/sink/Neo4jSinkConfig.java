@@ -19,9 +19,14 @@ package io.cdap.plugin.sink;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
-import io.cdap.cdap.api.plugin.PluginConfig;
-import io.cdap.plugin.common.Constants;
+import io.cdap.cdap.etl.api.FailureCollector;
+import io.cdap.plugin.common.ConfigUtil;
+import io.cdap.plugin.common.IdUtils;
+import io.cdap.plugin.common.ReferencePluginConfig;
 
+import javax.annotation.Nullable;
+
+import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
 import static io.cdap.plugin.common.Neo4jConstants.USER;
@@ -29,45 +34,67 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 /**
  * Neo4j CDAP Sink config
  */
-public class Neo4jSinkConfig extends PluginConfig {
-    @Name(Constants.Reference.REFERENCE_NAME)
-    @Description(Constants.Reference.REFERENCE_NAME_DESCRIPTION)
-    private final String referenceName;
+public class Neo4jSinkConfig extends ReferencePluginConfig {
+
     @Name(URL)
     @Description("Neo4j URL")
     @Macro
-    private final String neo4jUrl;
+    private String url;
+
+    @Name(DATABASE)
+    @Description("Database name to connect to")
+    @Macro
+    private String database;
 
     @Name(USER)
     @Description("Neo4j User")
     @Macro
-    private final String neo4jUser;
+    private String user;
 
     @Name(PASSWORD)
     @Description("Neo4j Password")
     @Macro
-    private final String neo4jPassword;
+    private String password;
 
-    public Neo4jSinkConfig(String referenceName, String neo4jUrl, String neo4jUser, String neo4jPassword) {
-        this.referenceName = referenceName;
-        this.neo4jUrl = neo4jUrl;
-        this.neo4jUser = neo4jUser;
-        this.neo4jPassword = neo4jPassword;
+//  @Name(ConfigUtil.NAME_CONNECTION)
+//  @Macro
+//  @Nullable
+//  @Description("The existing connection to use.")
+//  private Neo4jConnectorConfig connection;
+
+    @Name(ConfigUtil.NAME_USE_CONNECTION)
+    @Nullable
+    @Description("Whether to use an existing connection.")
+    private Boolean useConnection;
+
+    public Neo4jSinkConfig(String referenceName) {
+        super(referenceName);
+    }
+
+    public void validate(FailureCollector collector) {
+        IdUtils.validateReferenceName(referenceName, collector);
+//    if (Strings.isNullOrEmpty(rowField)) {
+//      collector.addFailure("Row field must be given as a property.", null).withConfigProperty(NAME_ROWFIELD);
+//    }
     }
 
     public String getReferenceName() {
         return referenceName;
     }
 
-    public String getNeo4jUrl() {
-        return neo4jUrl;
+    public String getUrl() {
+        return url;
     }
 
-    public String getNeo4jUser() {
-        return neo4jUser;
+    public String getUser() {
+        return user;
     }
 
-    public String getNeo4jPassword() {
-        return neo4jPassword;
+    public String getPassword() {
+        return password;
+    }
+
+    public String getDatabase() {
+        return database;
     }
 }

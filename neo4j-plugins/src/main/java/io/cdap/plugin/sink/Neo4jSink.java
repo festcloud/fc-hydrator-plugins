@@ -16,6 +16,11 @@
 
 package io.cdap.plugin.sink;
 
+import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
+import static io.cdap.plugin.common.Neo4jConstants.URL;
+import static io.cdap.plugin.common.Neo4jConstants.USER;
+
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Metadata;
 import io.cdap.cdap.api.annotation.MetadataProperty;
@@ -24,21 +29,19 @@ import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.api.data.batch.Output;
 import io.cdap.cdap.api.data.batch.OutputFormatProvider;
 import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.cdap.etl.api.PipelineConfigurer;
 import io.cdap.cdap.etl.api.batch.BatchSink;
 import io.cdap.cdap.etl.api.batch.BatchSinkContext;
 import io.cdap.cdap.etl.api.connector.Connector;
+import io.cdap.plugin.common.ReferenceBatchSink;
 import io.cdap.plugin.connector.Neo4jConnector;
-import org.apache.hadoop.io.NullWritable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
-import static io.cdap.plugin.common.Neo4jConstants.URL;
-import static io.cdap.plugin.common.Neo4jConstants.USER;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Neo4j CDAP Sink
@@ -46,13 +49,17 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 @Plugin(type = BatchSink.PLUGIN_TYPE)
 @Name("Neo4j")
 @Description("Neo4j Sink")
-@Metadata(properties = {@MetadataProperty(key = Connector.PLUGIN_TYPE, value = Neo4jConnector.NAME)})
-public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, StructuredRecord> {
+@Metadata(properties = {
+        @MetadataProperty(key = Connector.PLUGIN_TYPE, value = Neo4jConnector.NAME)})
+public class Neo4jSink extends
+        ReferenceBatchSink<StructuredRecord, StructuredRecord, StructuredRecord> {
+
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jSink.class);
 
     private final Neo4jSinkConfig config;
 
     public Neo4jSink(Neo4jSinkConfig config) {
+        super(config);
         this.config = config;
     }
 
@@ -60,12 +67,16 @@ public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, Str
     public void configurePipeline(PipelineConfigurer pipelineConfigurer) {
         LOG.info("Call configurePipeline function");
         super.configurePipeline(pipelineConfigurer);
+        FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
+        config.validate(collector);
     }
 
     @Override
     public void prepareRun(BatchSinkContext context) throws Exception {
         LOG.info("Call prepareRun function");
-        // validation
+        FailureCollector collector = context.getFailureCollector();
+        config.validate(collector);
+        collector.getOrThrowException();
         context.addOutput(Output.of(config.getReferenceName(), new Neo4jOutputFormatProvider(config)));
     }
 
@@ -91,9 +102,10 @@ public class Neo4jSink extends BatchSink<StructuredRecord, StructuredRecord, Str
         @Override
         public Map<String, String> getOutputFormatConfiguration() {
             Map<String, String> configMap = new HashMap<>();
-            configMap.put(URL, config.getNeo4jUrl());
-            configMap.put(USER, config.getNeo4jUser());
-            configMap.put(PASSWORD, config.getNeo4jPassword());
+            configMap.put(URL, config.getUrl());
+            configMap.put(USER, config.getUser());
+            configMap.put(PASSWORD, config.getPassword());
+            configMap.put(DATABASE, config.getDatabase());
             return configMap;
         }
     }

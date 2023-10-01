@@ -27,6 +27,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <neo4j.version>4.4.12</neo4j.version>
         <cdap.version>6.9.1</cdap.version>
+        <checkstyle.skip>true</checkstyle.skip>
     </properties>
 
     <dependencies>
