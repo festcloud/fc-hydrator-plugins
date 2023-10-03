@@ -2,7 +2,7 @@
   "metadata": {
     "spec-version": "1.5"
   },
-  "display-name": "Neo4j xx",
+  "display-name": "Neo4j ",
   "configuration-groups": [
     {
       "label": "Basic",

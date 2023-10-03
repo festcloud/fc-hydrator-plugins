@@ -5,32 +5,119 @@
   "display-name": "Neo4j",
   "configuration-groups": [
     {
-      "label": "Neo4j Configuration",
+      "label": "Connection",
       "properties": [
         {
-          "widget-type": "textbox",
-          "label": "Reference Name",
-          "name": "referenceName"
+          "widget-type": "toggle",
+          "label": "Use connection",
+          "name": "useConnection",
+          "widget-attributes": {
+            "on": {
+              "value": "true",
+              "label": "YES"
+            },
+            "off": {
+              "value": "false",
+              "label": "NO"
+            },
+            "default": "false"
+          }
+        },
+        {
+          "widget-type": "connection-select",
+          "label": "Connection",
+          "name": "connection",
+          "widget-attributes": {
+            "connectionType": "Neo4j"
+          }
+        },
+        {
+          "widget-type": "plugin-list",
+          "label": "JDBC Driver name",
+          "name": "jdbcPluginName",
+          "widget-attributes": {
+            "plugin-type": "Neo4j"
+          }
         },
         {
           "widget-type": "textbox",
           "label": "Connection URL",
-          "name": "neo4jURL"
+          "name": "url"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "database",
+          "name": "database"
         },
         {
           "widget-type": "textbox",
           "label": "Username",
-          "name": "neo4jUser"
+          "name": "user"
         },
         {
           "widget-type": "password",
           "label": "Password",
-          "name": "neo4jPassword"
+          "name": "password"
+        }
+      ]
+    },
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName",
+          "widget-attributes": {
+            "placeholder": "Name used to identify this source for lineage. Typically, the name of the table/view."
+          }
         }
       ]
     }
   ],
-  "outputs": [ ],
+  "outputs": [],
+  "filters": [
+    {
+      "name": "showConnectionProperties ",
+      "condition": {
+        "expression": "useConnection == false"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "jdbcPluginName"
+        },
+        {
+          "type": "property",
+          "name": "url"
+        },
+        {
+          "type": "property",
+          "name": "database"
+        },
+        {
+          "type": "property",
+          "name": "user"
+        },
+        {
+          "type": "property",
+          "name": "password"
+        }
+      ]
+    },
+    {
+      "name": "showConnectionId",
+      "condition": {
+        "expression": "useConnection == true"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "connection"
+        }
+      ]
+    }
+  ],
   "jump-config": {
     "datasets": [
       {
