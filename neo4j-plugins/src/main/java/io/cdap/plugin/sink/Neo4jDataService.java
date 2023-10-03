@@ -25,16 +25,19 @@ import org.neo4j.driver.types.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+
+import static io.cdap.plugin.sink.CypherQueryBuilder.generateMatchStatements;
+import static io.cdap.plugin.sink.CypherQueryBuilder.generateMergeQuery;
+import static io.cdap.plugin.sink.CypherQueryBuilder.processPropertyIntoQuery;
 
 /**
  * Neo4j specific data service
  */
 public class Neo4jDataService {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jDataService.class);
-    private static final String COLON = ":";
     private static final String EQUAL = "=";
 
     private final Session session;
@@ -99,59 +102,35 @@ public class Neo4jDataService {
         });
     }
 
+    private static final String RELATION_MAPPING = "(холдинг)<-[:Належить]-(m)";
     /**
-     * MATCH (parent {id: '1abce5e1-b7fb-11ea-82ff-97299e06153c'})
-     * MERGE (parent)<-[:BELONGS]-(m:ElementName {Id: '3de87cb7-b7fb-11ea-82ff-97299e06153c',
-     * PropertyName: 'Random Value', OtherProperty: '32'})
+     * MATCH (a {name: 'Oliver Stone'})
+     * MATCH (b {name: 'Marian M'})
+     * MERGE (m:ElementName {Id: '34534', PropertyName: 'One more Record', OtherProperty: '32'})
+     * MERGE (a)<-[:BELONGS]-(m)
+     * MERGE (b)<-[:BELONGS]-(m)
      * RETURN m
      */
     public Node createNode(StructuredRecord input) {
         LOG.info("Create new node from: {}", input.toString());
-        Objects.requireNonNull(input.getSchema());
-        Objects.requireNonNull(input.getSchema().getFields());
-        StringBuilder queryBuilder = new StringBuilder("MERGE (m {");
-        List<String> ownProperties = new ArrayList<>();
-        for (Schema.Field field : input.getSchema().getFields()) {
-            LOG.info("Field: {}", field.toString());
-            LOG.info("Field type {}", field.getSchema().getType());
-            if (Schema.Type.RECORD.equals(field.getSchema().getType())) {
-                LOG.info("It's record");
-                // TODO: skipped for the time being
-            } else if (field.getSchema().getType().isSimpleType()) {
-                LOG.info("It's simple type");
-                ownProperties.add(
-                        processPropertyIntoQuery(input, field, field.getSchema().getType(), COLON, false));
-            } else if (Schema.Type.UNION.equals(field.getSchema().getType())) {
-                ownProperties.add(
-                        processPropertyIntoQuery(input, field, field.getSchema().getNonNullable().getType(),
-                                COLON, false));
-            } else {
-                LOG.warn("Unrecognized field type");
-            }
+        StringBuilder queryBuilder = new StringBuilder();
+        Map<String, String> matchStatements = generateMatchStatements(input);
+        if (matchStatements.size() > 0) {
+            matchStatements.values().forEach(queryBuilder::append);
         }
-        queryBuilder.append(String.join(",", ownProperties));
-        queryBuilder.append("}) RETURN m");
-        String query = queryBuilder.toString();
+        String mergeQuery = generateMergeQuery(input);
+        queryBuilder.append(mergeQuery);
+        matchStatements.keySet().forEach(key -> {
+            if (RELATION_MAPPING.contains(key)) {
+                queryBuilder.append("MERGE ").append(RELATION_MAPPING);
+            }
+        });
+        queryBuilder.append(" RETURN m");
+        final String query = queryBuilder.toString();
         LOG.info(query);
         return session.writeTransaction(tx -> {
             Result result = tx.run(query);
             return result.single().get(0).asNode();
         });
-    }
-
-    // TODO: null values have to be processed additionally as in this setup records are created differently
-    private String processPropertyIntoQuery(StructuredRecord input, Schema.Field field, Schema.Type type,
-                                            String delimiter, Boolean addNull) {
-        String subQuery = field.getName() + delimiter;
-        Object dataField = input.get(field.getName());
-        if (addNull && (dataField == null || dataField.toString().isEmpty())) {
-            return subQuery + "null";
-        } else {
-            if (Schema.Type.STRING.equals(type)) {
-                return subQuery + "'" + dataField + "'";
-            } else {
-                return subQuery + dataField;
-            }
-        }
     }
 }

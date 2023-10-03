@@ -24,8 +24,10 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.types.Node;
 
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Data Service Test
@@ -50,7 +52,28 @@ public class Neo4jDataServiceTest {
                     Schema.of(Schema.Type.STRING))),
             Schema.Field.of("IsSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.BOOLEAN))));
-    @Test @Ignore
+    private static final Schema INNTER_SCHEMA = Schema.recordOf(
+            "Holding",
+            Schema.Field.of("Метадані", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("УІД", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("Імя", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))));
+    private static final Schema BODY_WITH_CHILD_SCHEMA = Schema.recordOf(
+            "Dictionary",
+            Schema.Field.of("Metadata", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("UID", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("Name", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("InnerObject", INNTER_SCHEMA),
+            Schema.Field.of("IsSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.BOOLEAN))));
+
+    @Test
+    @Ignore
     public void createNode() throws IOException {
         StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_SCHEMA.toString()))
                 .set("Metadata", "Holding")
@@ -62,13 +85,41 @@ public class Neo4jDataServiceTest {
         dataService.createNode(input);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
+    public void createWithRelation() throws IOException {
+        StructuredRecord inner = StructuredRecord.builder(Schema.parseJson(INNTER_SCHEMA.toString()))
+                .set("Метадані", "Холдинг")
+                .set("УІД", "1111111111")
+                .set("Імя", "Бізнес")
+                .build();
+        StructuredRecord inputWithList = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
+                .set("Metadata", "Альянс")
+                .set("UID", "333333333")
+                .set("Name", "Група")
+                .set("InnerObject", Collections.singletonList(inner))
+                .set("IsSomething", false)
+                .build();
+        dataService.createNode(inputWithList);
+        StructuredRecord inputWithObject = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
+                .set("Metadata", "Альянс")
+                .set("UID", "333333333")
+                .set("Name", "Група")
+                .set("InnerObject", inner)
+                .set("IsSomething", false)
+                .build();
+        dataService.createNode(inputWithObject);
+    }
+
+    @Test
+    @Ignore
     public void testRead() {
         Record id = dataService.getUniqueNodeByProperty("id", "kj345k2j53k45");
         Assert.assertNotNull(id);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void updateNode() throws IOException {
         StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_SCHEMA.toString()))
                 .set("Metadata", "Holding")
