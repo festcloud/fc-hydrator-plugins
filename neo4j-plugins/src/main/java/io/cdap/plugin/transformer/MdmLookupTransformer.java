@@ -68,8 +68,8 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
             .collect(Collectors.toList());
 
         if (!notFoundList.isEmpty()) {
-            notFoundList.forEach(id -> emitter.emitError(
-                new InvalidEntry<>(1, String.format("Not found in MDM. UUID: %s", id), input)));
+            notFoundList.forEach(uuid -> emitter.emitError(
+                new InvalidEntry<>(1, uuid, input)));
         } else {
             emitter.emit(input);
         }
@@ -88,8 +88,6 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
             if (field.getName().equals(lookupColumn)) {
                 lookupData.add(processProperty(input, field));
             }
-        } else {
-            LOG.warn("Unrecognized field type");
         }
     }
 
