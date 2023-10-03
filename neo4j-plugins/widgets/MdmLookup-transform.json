@@ -1,0 +1,52 @@
+{
+    "metadata": {
+        "spec-version": "1.5"
+    },
+    "configuration-groups": [
+        {
+            "label": "MDM lookup Configuration",
+            "properties": [
+                {
+                    "widget-type": "textbox",
+                    "label": "Neo4j user name",
+                    "name": "userName"
+                },
+                {
+                    "widget-type": "password",
+                    "label": "Neo4j user password",
+                    "name": "userPassword"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Neo4j URI",
+                    "name": "databaseHost"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Any uniq identifier we’d like to validate in MDM",
+                    "name": "columName"
+                }
+            ]
+        }
+    ],
+    "outputs": [
+        {
+            "name": "schema",
+            "widget-type": "schema",
+            "widget-attributes": {
+                "schema-types": [
+                    "boolean",
+                    "bytes",
+                    "int",
+                    "long",
+                    "float",
+                    "double",
+                    "string",
+                    "map<string, string>"
+                ],
+                "schema-default-type": "string"
+            }
+        }
+    ],
+    "emit-errors": true
+}
