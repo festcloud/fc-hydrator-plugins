@@ -11,11 +11,6 @@
           "widget-type": "textbox",
           "label": "Connection URL",
           "name": "url"
-        },
-        {
-          "widget-type": "textbox",
-          "label": "database",
-          "name": "database"
         }
       ]
     },
