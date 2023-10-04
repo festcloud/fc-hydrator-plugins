@@ -28,9 +28,11 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
 
 import java.io.IOException;
 
+import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
 import static io.cdap.plugin.common.Neo4jConstants.USER;
@@ -58,7 +60,8 @@ public class Neo4jOutputFormat extends OutputFormat<StructuredRecord, Structured
             driver = GraphDatabase.driver(configuration.get(URL),
                     AuthTokens.basic(configuration.get(USER), configuration.get(PASSWORD)));
         }
-        return driver.session();
+        SessionConfig sessionConfig = SessionConfig.builder().withDatabase(configuration.get(DATABASE)).build();
+        return driver.session(sessionConfig);
     }
 
     @Override

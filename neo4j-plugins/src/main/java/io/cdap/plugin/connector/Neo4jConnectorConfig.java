@@ -21,7 +21,6 @@ import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.plugin.PluginConfig;
 
-import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
 import static io.cdap.plugin.common.Neo4jConstants.USER;
@@ -46,18 +45,10 @@ public class Neo4jConnectorConfig extends PluginConfig {
     @Macro
     private final String password;
 
-
-    @Name(DATABASE)
-    @Description("database")
-    @Macro
-    private final String database;
-
-
-    public Neo4jConnectorConfig(String url, String user, String password, String database) {
+    public Neo4jConnectorConfig(String url, String user, String password) {
         this.url = url;
         this.user = user;
         this.password = password;
-        this.database = database;
     }
 
     public String getUrl() {
@@ -72,7 +63,4 @@ public class Neo4jConnectorConfig extends PluginConfig {
         return password;
     }
 
-    public String getDatabase() {
-        return database;
-    }
 }

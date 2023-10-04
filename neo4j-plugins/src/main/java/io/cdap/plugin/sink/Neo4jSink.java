@@ -16,11 +16,6 @@
 
 package io.cdap.plugin.sink;
 
-import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
-import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
-import static io.cdap.plugin.common.Neo4jConstants.URL;
-import static io.cdap.plugin.common.Neo4jConstants.USER;
-
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Metadata;
 import io.cdap.cdap.api.annotation.MetadataProperty;
@@ -35,13 +30,18 @@ import io.cdap.cdap.etl.api.batch.BatchSink;
 import io.cdap.cdap.etl.api.batch.BatchSinkContext;
 import io.cdap.cdap.etl.api.connector.Connector;
 import io.cdap.plugin.common.ReferenceBatchSink;
+import io.cdap.plugin.common.ReferencePluginConfig;
 import io.cdap.plugin.connector.Neo4jConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
+import static io.cdap.plugin.common.Neo4jConstants.URL;
+import static io.cdap.plugin.common.Neo4jConstants.USER;
 
 /**
  * Neo4j CDAP Sink
@@ -59,7 +59,7 @@ public class Neo4jSink extends
     private final Neo4jSinkConfig config;
 
     public Neo4jSink(Neo4jSinkConfig config) {
-        super(config);
+        super(new ReferencePluginConfig(config.getReferenceName()));
         this.config = config;
     }
 
@@ -69,6 +69,7 @@ public class Neo4jSink extends
         super.configurePipeline(pipelineConfigurer);
         FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
         config.validate(collector);
+        super.configurePipeline(pipelineConfigurer);
     }
 
     @Override
