@@ -82,14 +82,13 @@
           "widget-type": "keyvalue",
           "label": "Request Headers",
           "name": "requestHeaders",
-          "widget-attributes" : {
+          "widget-attributes": {
             "showDelimiter": "false",
-            "kv-delimiter" : ":",
-            "delimiter" : ";"
+            "kv-delimiter": ":",
+            "delimiter": ";"
           }
         },
         {
-
         }
       ]
     },
@@ -126,6 +125,40 @@
           "name": "password"
         }
       ]
+    },
+    {
+      "label": "Mapping",
+      "properties": [
+        {
+          "widget-type": "radio-group",
+          "label": "Mapping Type",
+          "name": "mappingType",
+          "widget-attributes": {
+            "layout": "inline",
+            "default": "none",
+            "options": [
+              {
+                "id": "none",
+                "label": "Standard"
+              },
+              {
+                "id": "customMapping",
+                "label": "Custom Mapping"
+              }
+            ]
+          }
+        },
+        {
+          "widget-type": "keyvalue",
+          "label": "Json Path Mappings",
+          "name": "mapping",
+          "widget-attributes": {
+            "showDelimiter": "false",
+            "key-placeholder": "Result variable name",
+            "value-placeholder": "JsonPath value"
+          }
+        }
+      ]
     }
   ],
   "outputs": [],
@@ -147,7 +180,20 @@
           "type": "property"
         }
       ]
+    },
+    {
+      "name": "Mapping type",
+      "condition": {
+        "property": "mappingType",
+        "operator": "equal to",
+        "value": "customMapping"
+      },
+      "show": [
+        {
+          "name": "mapping",
+          "type": "property"
+        }
+      ]
     }
   ]
-
 }

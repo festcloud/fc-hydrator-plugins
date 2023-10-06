@@ -16,8 +16,8 @@
 
 package io.cdap.plugin.actions;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
@@ -27,9 +27,7 @@ import io.cdap.cdap.etl.api.action.Action;
 import io.cdap.cdap.etl.api.action.ActionContext;
 import io.cdap.plugin.http.HttpClient;
 import io.cdap.plugin.http.HttpResponse;
-import io.cdap.plugin.proto.Argument;
-import io.cdap.plugin.proto.Configuration;
-import java.io.IOException;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +41,13 @@ public class HTTPArgumentSetter extends Action {
 
   private static final Logger LOG = LoggerFactory.getLogger(HTTPArgumentSetter.class);
 
-  private static final Gson gson = new Gson();
-
 
   protected final HTTPArgumentSetterConfig config;
+  // Map of field name to path as specified in the configuration, if none specified then it's direct mapping.
+  private final Map<String, String> mapping = Maps.newHashMap();
   private HttpClient httpClient;
   private int httpStatusCode;
   private HttpResponse response;
-
 
   public HTTPArgumentSetter(HTTPArgumentSetterConfig conf) {
     this.config = conf;
@@ -60,12 +57,14 @@ public class HTTPArgumentSetter extends Action {
   public void configurePipeline(PipelineConfigurer pipelineConfigurer) {
     FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
     config.validate(collector);
+    extractMappings(collector);
   }
 
   @Override
   public void run(ActionContext context) throws Exception {
     FailureCollector collector = context.getFailureCollector();
     config.validate(collector);
+    extractMappings(collector);
     collector.getOrThrowException();
 
     LOG.debug("Fetching '{}'", config.getUrl());
@@ -85,26 +84,36 @@ public class HTTPArgumentSetter extends Action {
               responseCode, body));
     }
     handleResponse(context, body);
-//    RetryableErrorHandling errorHandlingStrategy = httpErrorHandler.getErrorHandlingStrategy(httpStatusCode);
   }
 
   //  @Override
-  protected void handleResponse(ActionContext context, String body) throws IOException {
-    try {
-      Configuration configuration = gson.fromJson(body, Configuration.class);
-      for (Argument argument : configuration.getArguments()) {
-        String name = argument.getName();
-        String value = argument.getValue();
-        if (value != null) {
-          context.getArguments().set(name, value);
-        } else {
-          throw new RuntimeException(
-              "Configuration '" + name + "' is null. Cannot set argument to null.");
-        }
+  protected void handleResponse(ActionContext context, String body) {
+
+    switch (config.getMappingType()) {
+      case CUSTOM_MAPPING:
+        HTTPArgumentSetterResponseParser.jsonPathParser(context, body, mapping);
+        break;
+      case STANDARD:
+        HTTPArgumentSetterResponseParser.standardParser(context, body, config);
+    }
+  }
+
+  private void extractMappings(FailureCollector collector) {
+    MappingType mappingType = config.getMappingType();
+    if (MappingType.STANDARD.equals(mappingType)) {
+      LOG.debug("Use standard mapping, not parsing are needed.");
+      return;
+    }
+    String[] pathMaps = config.getMapping().split(",");
+    for (String pathMap : pathMaps) {
+      String[] mapParts = pathMap.split(":");
+      if (mapParts.length != 2 || Strings.isNullOrEmpty(mapParts[0]) || Strings.isNullOrEmpty(
+          mapParts[1])) {
+        collector.addFailure("Both field name and JSON expression map must be provided.", null)
+            .withConfigElement(HTTPArgumentSetterConfig.NAME_MAPPING, pathMap);
+      } else {
+        mapping.put(mapParts[0], mapParts[1]);
       }
-    } catch (JsonSyntaxException e) {
-      throw new RuntimeException(String.format("Could not parse response from '%s': %s",
-          config.getUrl(), e.getMessage()));
     }
   }
 

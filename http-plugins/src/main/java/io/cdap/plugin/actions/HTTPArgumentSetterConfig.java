@@ -17,6 +17,7 @@
 package io.cdap.plugin.actions;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
@@ -39,10 +40,13 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
 
   public static final String NAME_NUM_RETRIES = "numRetries";
   public static final String NAME_AUTH_TYPE = "authType";
+  public static final String NAME_MAPPING_TYPE = "mappingType";
   public static final String NAME_USERNAME = "username";
   public static final String NAME_PASSWORD = "password";
   public static final String PROPERTY_AUTH_TYPE_LABEL = "Auth type";
+  public static final String PROPERTY_MAPPING_TYPE_LABEL = "Mapping type";
   public static final String NAME_METHOD = "method";
+  public static final String NAME_MAPPING = "mapping";
 
 
   @Nullable
@@ -61,6 +65,11 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
       + "OAuth2, Service account, Basic Authentication types are available.")
   private String authType;
 
+  @Name(NAME_MAPPING_TYPE)
+  @Description("Type of response parser used.")
+  @Macro
+  private String mappingType;
+
   @Nullable
   @Name(NAME_USERNAME)
   @Description("Username for basic authentication.")
@@ -70,12 +79,23 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
   @Name(NAME_METHOD)
   @Description("The http request method.")
   @Macro
-  private String method;
+  private final String method;
 
   @Nullable
   @Description("The http request method. Defaults to GET.")
   @Macro
   private String body;
+
+  @Name(NAME_MAPPING)
+  @Description(
+      "Maps complex JSON to output fields using JSON path expressions. First field defines the output "
+          +
+          "field name and the second field specifies the JSON path expression, such as '$.employee.name.first'. "
+          +
+          "See reference documentation for additional examples.")
+  @Nullable
+  private String mapping;
+
 
   public HTTPArgumentSetterConfig() {
     super();
@@ -96,6 +116,7 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
     validateMethod(collector);
     validateNumRetries(collector);
     validateAuthentication(collector);
+    validateMapping(collector);
   }
 
   private void validateMethod(FailureCollector collector) {
@@ -127,15 +148,42 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
         }
         break;
     }
+  }
 
+  private void validateMapping(FailureCollector collector) {
+    MappingType mappingType = getMappingType();
+    switch (mappingType) {
+      case STANDARD:
+        // todo:: implement
+        break;
+      case CUSTOM_MAPPING:
+        String reasonCustomMapping = "Custom mapping is selected";
+        if (!containsMacro(NAME_MAPPING)) {
+          assertIsSet(getMapping(), NAME_MAPPING, reasonCustomMapping);
+        }
+        break;
+    }
   }
 
   public AuthType getAuthType() {
     return AuthType.fromValue(authType);
   }
 
+  public MappingType getMappingType() {
+    return MappingType.fromValue(mappingType);
+  }
+
   public String getAuthTypeString() {
     return authType;
+  }
+
+  public String getMappingTypeString() {
+    return mappingType;
+  }
+
+  @Nullable
+  public String getMapping() {
+    return mapping;
   }
 
   public String getMethod() {
