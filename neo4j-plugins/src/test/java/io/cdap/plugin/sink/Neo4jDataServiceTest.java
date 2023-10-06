@@ -24,7 +24,6 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
-import org.neo4j.driver.types.Node;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -54,7 +53,7 @@ public class Neo4jDataServiceTest {
                     Schema.of(Schema.Type.BOOLEAN))));
     private static final Schema INNTER_SCHEMA = Schema.recordOf(
             "Holding",
-            Schema.Field.of("Метадані", Schema.unionOf(Schema.of(Schema.Type.NULL),
+            Schema.Field.of("ОбєктМетаданих", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
             Schema.Field.of("УІД", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
@@ -89,7 +88,7 @@ public class Neo4jDataServiceTest {
     @Ignore
     public void createWithRelation() throws IOException {
         StructuredRecord inner = StructuredRecord.builder(Schema.parseJson(INNTER_SCHEMA.toString()))
-                .set("Метадані", "Холдинг")
+                .set("ОбєктМетаданих", "Холдинг")
                 .set("УІД", "1111111111")
                 .set("Імя", "Бізнес")
                 .build();
@@ -100,7 +99,7 @@ public class Neo4jDataServiceTest {
                 .set("InnerObject", Collections.singletonList(inner))
                 .set("IsSomething", false)
                 .build();
-        dataService.createNode(inputWithList);
+        //dataService.createNode(inputWithList);
         StructuredRecord inputWithObject = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
                 .set("Metadata", "Альянс")
                 .set("UID", "333333333")

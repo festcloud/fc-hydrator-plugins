@@ -18,7 +18,6 @@ package io.cdap.plugin.sink;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
-import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +57,8 @@ public class CypherQueryBuilder {
     private static final String COLON = ":";
     private static final Pattern NODES_PATTERN = Pattern.compile("\\((\\w+)\\)");
     private static final Pattern RELATION_PATTERN = Pattern.compile("\\)([-<>]\\[:\\w+\\][-><]+)\\(");
-    public static final String[] FIELD_METADATA = new String[] {"Metadata", "ОбєктМетаданих"};
-    public static final String[] FIELD_UID = new String[] {"UID", "УІД"};
+    public static final String[] FIELD_METADATA = new String[]{"Metadata", "ОбєктМетаданих"};
+    public static final String[] FIELD_UID = new String[]{"UID", "УІД"};
 
 
     public static void parseCypherMapping(String cypherMapping) {
@@ -91,10 +90,12 @@ public class CypherQueryBuilder {
                 if (fieldValue instanceof Collection) {
                     matchStatements.putAll(generateMatchStatementFromArray(input, field));
                 } else if (fieldValue instanceof StructuredRecord) {
-                    String metadataLabel = getMetadataLabel(input);
-                    String matchStatement = recordToMatchStatement((StructuredRecord) fieldValue, metadataLabel);
-                    if (metadataLabel != null && matchStatement != null) {
-                        matchStatements.put(metadataLabel, matchStatement);
+                    StructuredRecord structuredFieldValue = (StructuredRecord) fieldValue;
+                    String metadataLabel = getMetadataLabel(structuredFieldValue);
+                    if (metadataLabel != null) {
+                        String matchStatement = recordToMatchStatement(structuredFieldValue,
+                                metadataLabel.toLowerCase());
+                        matchStatements.put(metadataLabel.toLowerCase(), matchStatement);
                     }
                 }
             } else if (Schema.Type.ARRAY.equals(field.getSchema().getType())) {
@@ -110,10 +111,9 @@ public class CypherQueryBuilder {
         for (Object inner : ((Collection) Objects.requireNonNull(input.get(field.getName())))) {
             if (inner instanceof StructuredRecord) {
                 String metadataLabel = getMetadataLabel((StructuredRecord) inner);
-                String matchStatement = recordToMatchStatement((StructuredRecord) inner, metadataLabel);
-                if (metadataLabel != null && matchStatement != null) {
-                    matchStatements.put(metadataLabel,
-                            recordToMatchStatement((StructuredRecord) inner, metadataLabel));
+                if (metadataLabel != null) {
+                    String matchStatement = recordToMatchStatement((StructuredRecord) inner, metadataLabel.toLowerCase());
+                    matchStatements.put(metadataLabel.toLowerCase(), matchStatement);
                 }
             }
         }
@@ -159,10 +159,10 @@ public class CypherQueryBuilder {
     }
 
     private static String recordToMatchStatement(StructuredRecord record, String label) {
-        String matchStatementTemplate = "MATCH (%s {%s: '%s'})";
-        Pair<String, String> idFieldValue = getRecordId(record);
+        String matchStatementTemplate = "MATCH (%s {UID: '%s'})";
+        String idFieldValue = getRecordId(record);
         if (idFieldValue != null) {
-            return String.format(matchStatementTemplate, label, idFieldValue.getKey(), idFieldValue.getValue());
+            return String.format(matchStatementTemplate, label, idFieldValue);
         } else {
             LOG.error("Provided id property name is not present in the inner element");
             // TODO: possibly throw an error
@@ -170,11 +170,11 @@ public class CypherQueryBuilder {
         }
     }
 
-    private static Pair<String, String> getRecordId(StructuredRecord record) {
+    private static String getRecordId(StructuredRecord record) {
         for (String idField : FIELD_UID) {
             Object idValue = record.get(idField);
             if (idValue != null) {
-                return Pair.create(idField, idValue.toString());
+                return idValue.toString();
             }
         }
         return null;
@@ -182,12 +182,12 @@ public class CypherQueryBuilder {
 
     private static String getMetadataLabel(StructuredRecord input) {
         for (String metadataField : FIELD_METADATA) {
-
             Object metadataValue = input.get(metadataField);
             if (metadataValue != null) {
-                return metadataValue.toString().toLowerCase();
+                return metadataValue.toString();
             }
         }
+        LOG.error("No label with names: {} found in: {}", FIELD_METADATA, input.getSchema());
         // TODO: possibly throw an error
         return null;
     }

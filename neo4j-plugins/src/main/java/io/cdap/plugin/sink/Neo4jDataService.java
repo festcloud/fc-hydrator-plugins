@@ -112,7 +112,7 @@ public class Neo4jDataService {
      * RETURN m
      */
     public Node createNode(StructuredRecord input) {
-        LOG.info("Create new node from: {}", input.toString());
+        LOG.info("Create new node from");
         StringBuilder queryBuilder = new StringBuilder();
         Map<String, String> matchStatements = generateMatchStatements(input);
         if (matchStatements.size() > 0) {

@@ -44,7 +44,6 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, Structured
     public void write(StructuredRecord key, StructuredRecord value) {
         String uid = value.get(ID);
         LOG.info("Start processing element with id: {}", uid);
-        LOG.info("Just for fun: {}", (String) key.get(ID));
         Record existedNode = dataService.getUniqueNodeByProperty(ID, uid);
         if (existedNode != null) {
             Node updatedNode = dataService.updateNode(ID, uid, value);
