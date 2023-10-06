@@ -8,22 +8,9 @@
       "label": "Basic",
       "properties": [
         {
-          "widget-type": "plugin-list",
-          "label": "JDBC Driver name",
-          "name": "jdbcPluginName",
-          "widget-attributes": {
-            "plugin-type": "Neo4j"
-          }
-        },
-        {
           "widget-type": "textbox",
           "label": "Connection URL",
           "name": "url"
-        },
-        {
-          "widget-type": "textbox",
-          "label": "database",
-          "name": "database"
         }
       ]
     },
@@ -43,12 +30,5 @@
       ]
     }
   ],
-  "outputs": [],
-  "jump-config": {
-    "datasets": [
-      {
-        "ref-property-name": "referenceName"
-      }
-    ]
-  }
+  "outputs": []
 }

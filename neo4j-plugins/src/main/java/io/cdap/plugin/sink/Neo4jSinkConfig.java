@@ -19,10 +19,13 @@ package io.cdap.plugin.sink;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
+import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.ConfigUtil;
+import io.cdap.plugin.common.Constants;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.common.ReferencePluginConfig;
+import io.cdap.plugin.connector.Neo4jConnectorConfig;
 
 import javax.annotation.Nullable;
 
@@ -34,45 +37,31 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
 /**
  * Neo4j CDAP Sink config
  */
-public class Neo4jSinkConfig extends ReferencePluginConfig {
+public class Neo4jSinkConfig extends PluginConfig {
 
-    @Name(URL)
-    @Description("Neo4j URL")
-    @Macro
-    private String url;
+    @Name(Constants.Reference.REFERENCE_NAME)
+    @Description(Constants.Reference.REFERENCE_NAME_DESCRIPTION)
+    public String referenceName;
 
     @Name(DATABASE)
     @Description("Database name to connect to")
     @Macro
     private String database;
 
-    @Name(USER)
-    @Description("Neo4j User")
+    @Name(ConfigUtil.NAME_CONNECTION)
     @Macro
-    private String user;
-
-    @Name(PASSWORD)
-    @Description("Neo4j Password")
-    @Macro
-    private String password;
-
-//  @Name(ConfigUtil.NAME_CONNECTION)
-//  @Macro
-//  @Nullable
-//  @Description("The existing connection to use.")
-//  private Neo4jConnectorConfig connection;
+    @Nullable
+    @Description("The connection to use.")
+    private Neo4jConnectorConfig connection;
 
     @Name(ConfigUtil.NAME_USE_CONNECTION)
     @Nullable
     @Description("Whether to use an existing connection.")
     private Boolean useConnection;
 
-    public Neo4jSinkConfig(String referenceName) {
-        super(referenceName);
-    }
-
     public void validate(FailureCollector collector) {
         IdUtils.validateReferenceName(referenceName, collector);
+        ConfigUtil.validateConnection(this, useConnection, connection, collector);
 //    if (Strings.isNullOrEmpty(rowField)) {
 //      collector.addFailure("Row field must be given as a property.", null).withConfigProperty(NAME_ROWFIELD);
 //    }
@@ -83,15 +72,15 @@ public class Neo4jSinkConfig extends ReferencePluginConfig {
     }
 
     public String getUrl() {
-        return url;
+        return connection.getUrl();
     }
 
     public String getUser() {
-        return user;
+        return connection.getUser();
     }
 
     public String getPassword() {
-        return password;
+        return connection.getPassword();
     }
 
     public String getDatabase() {

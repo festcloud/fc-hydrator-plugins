@@ -32,7 +32,6 @@ import io.cdap.cdap.etl.api.connector.ConnectorSpecRequest;
 import io.cdap.cdap.etl.api.connector.PluginSpec;
 import io.cdap.cdap.etl.api.connector.SampleType;
 import io.cdap.cdap.etl.api.validation.ValidationException;
-import io.cdap.cdap.etl.api.validation.ValidationFailure;
 import io.cdap.plugin.common.ConfigUtil;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
@@ -40,12 +39,10 @@ import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
-import org.neo4j.driver.SessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,15 +73,15 @@ public class Neo4jConnector implements Connector {
     @Override
     public void test(ConnectorContext context) throws ValidationException {
         LOG.info("Call test function");
-        SessionConfig sessionConfig = SessionConfig.builder().withDatabase(config.getDatabase()).build();
-        try (Session session = driver.session(sessionConfig)) {
+        try (Session session = driver.session()) {
             Result run = session.run(QUERY_NODES_COUNT);
             if (run.hasNext()) {
                 LOG.info("Test connection passed successfully");
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            throw new ValidationException(Collections.singletonList(new ValidationFailure(e.getMessage())));
+            context.getFailureCollector().addFailure(e.getMessage(),
+                    "Make sure you specify the correct connection properties.").withStacktrace(e.getStackTrace());
         }
     }
 

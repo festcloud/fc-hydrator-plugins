@@ -25,19 +25,8 @@
         },
         {
           "widget-type": "connection-select",
-          "label": "Connection",
-          "name": "connection",
-          "widget-attributes": {
-            "connectionType": "Neo4j"
-          }
-        },
-        {
-          "widget-type": "plugin-list",
-          "label": "JDBC Driver name",
-          "name": "jdbcPluginName",
-          "widget-attributes": {
-            "plugin-type": "Neo4j"
-          }
+          "label": "Connection select ",
+          "name": "connection"
         },
         {
           "widget-type": "textbox",
@@ -46,17 +35,12 @@
         },
         {
           "widget-type": "textbox",
-          "label": "database",
-          "name": "database"
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Username",
+          "label": "Username Neo",
           "name": "user"
         },
         {
           "widget-type": "password",
-          "label": "Password",
+          "label": "Password Neo",
           "name": "password"
         }
       ]
@@ -71,6 +55,20 @@
           "widget-attributes": {
             "placeholder": "Name used to identify this source for lineage. Typically, the name of the table/view."
           }
+        },
+        {
+          "label": "browse",
+          "widget-type": "connection-browser",
+          "widget-category": "plugin",
+          "widget-attributes": {
+            "connectionType": "Neo4j",
+            "label": "Browse"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "database",
+          "name": "database"
         }
       ]
     }
@@ -85,15 +83,7 @@
       "show": [
         {
           "type": "property",
-          "name": "jdbcPluginName"
-        },
-        {
-          "type": "property",
           "name": "url"
-        },
-        {
-          "type": "property",
-          "name": "database"
         },
         {
           "type": "property",
