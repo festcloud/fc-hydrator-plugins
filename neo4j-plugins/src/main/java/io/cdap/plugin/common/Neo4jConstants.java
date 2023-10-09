@@ -24,4 +24,5 @@ public interface Neo4jConstants {
     String USER = "user";
     String PASSWORD = "password";
     String DATABASE = "database";
+    String RELATIONS = "relations";
 }
