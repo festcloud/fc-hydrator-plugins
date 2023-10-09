@@ -46,6 +46,27 @@
       ]
     },
     {
+      "label": "Relations",
+      "properties": [
+        {
+          "widget-type": "function-dropdown-with-alias",
+          "label": "Relations",
+          "name": "relations",
+          "widget-attributes": {
+            "placeholders": {
+              "field": "ElementName",
+              "alias": "direction",
+              "condition": "Relation name"
+            },
+            "dropdownOptions": [
+              ">",
+              "<"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "label": "Basic",
       "properties": [
         {
