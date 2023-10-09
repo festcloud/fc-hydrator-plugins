@@ -1,0 +1,43 @@
+steps:
+- name: 'maven:3.3-jdk-8'
+  entrypoint: 'mvn'
+  args: ['package','-Dmaven.test.skip=true']
+  dir: $_FOLDER
+- name: gcr.io/cloud-builders/gcloud
+  entrypoint: "bash"
+  args:
+          - "-c"
+          - |
+              #Deploy artifact to datafusion
+
+              curl -X POST \
+                -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+                -H "Artifact-Extends: system:cdap-data-pipeline[6.8.0-SNAPSHOT,7.0.0-SNAPSHOT)/system:cdap-data-streams[6.8.0-SNAPSHOT,7.0.0-SNAPSHOT)" \
+                --data-binary @$_FOLDER/target/neo4j-plugins-$_VERSION.jar \
+                $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER
+
+              #Deploy widget to datafusion
+
+              curl -X POST \
+                -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+                --data-binary @$_FOLDER/target/neo4j-plugins-$_VERSION.json \
+                $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER/versions/$_DF_VERSION/properties/
+
+artifacts:
+  mavenArtifacts:
+  - repository: 'https://$LOCATION-maven.pkg.dev/gcp-lab-datafusion-poc/gcp-lab-datafusion-poc-ar-mvn'
+    path: '$_FOLDER/target/*.jar'
+    artifactId: 'kogorta-pipeline'
+    groupId: 'cloud.ai'
+    version: '$SHORT_SHA'
+  objects:
+    location: 'gs://gcp-festcloud-cicd-csb-dfjson/$_FOLDER/target/*.json'
+    paths:
+      - $_FOLDER/config.json
+options:
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+substitutions:
+  _FOLDER: neo4j-plugins
+  _INSTANCE_URL: https://fest-instance-gcp-lab-datafusion-poc-dot-euw4.datafusion.googleusercontent.com
+  _VERSION: 2.12.0-SNAPSHOT
+  _DF_VERSION: 2.12.0.SNAPSHOT

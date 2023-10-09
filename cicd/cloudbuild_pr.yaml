@@ -1,0 +1,10 @@
+steps:
+  - name: maven:3.3-jdk-8
+    entrypoint: mvn
+    args:
+      - test
+    dir: $_FOLDER
+options:
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+substitutions:
+  _FOLDER: neo4j-plugins
