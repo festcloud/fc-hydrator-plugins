@@ -16,21 +16,13 @@
 
 package io.cdap.plugin.proto;
 
-import com.google.gson.Gson;
 import io.cdap.cdap.api.data.schema.Schema;
-//import io.cdap.common.http.HttpMethod;
-//import io.cdap.common.http.HttpRequest;
-//import io.cdap.common.http.HttpRequestConfig;
-//import io.cdap.common.http.HttpRequests;
-//import io.cdap.common.http.HttpResponse;
 import com.google.common.base.Joiner;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +47,7 @@ public final class Argument {
   }
 
   public String getValue() {
- /*   if (type.equalsIgnoreCase("import")) {
+ /*   if (type.equalsIgnoreCase("import")) { //todo: its come from the origin http setter plugin, not fit with current impl, needs refactor
       try {
         return importFromURL(value.getAsString());
       } catch (MalformedURLException e) {
@@ -92,27 +84,6 @@ public final class Argument {
   }
 
 
-//  private String importFromURL(String ref) throws MalformedURLException {
-//    HttpMethod method = HttpMethod.GET;
-//    URL url = new URL(ref);
-//    HttpRequest.Builder requestBuilder = HttpRequest.builder(method, url);
-//    HttpRequestConfig config = HttpRequestConfig.DEFAULT;
-//    int retries = 0;
-//    do {
-//      try {
-//        HttpResponse response = HttpRequests.execute(requestBuilder.build(), config);
-//        int responseCode = response.getResponseCode();
-//        if (responseCode / 100 != 2) {
-//          throw new IllegalStateException(String.format("Received non-ok response code %d. Response message = %s",
-//                                                        responseCode, response.getResponseMessage()));
-//        }
-//        return response.getResponseBodyAsString();
-//      } catch (Exception e) {
-//        retries++;
-//      }
-//    } while (retries < 2);
-//    return null;
-//  }
 
   private Schema createSchema(JsonElement array) {
     List<Schema.Field> fields = new ArrayList<>();

@@ -29,7 +29,6 @@
 
   <properties>
     <httpcomponents.version>4.5.9</httpcomponents.version>
-    <checkstyle.skip>true</checkstyle.skip>
   </properties>
 
   <dependencies>

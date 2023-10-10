@@ -153,9 +153,6 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
   private void validateMapping(FailureCollector collector) {
     MappingType mappingType = getMappingType();
     switch (mappingType) {
-      case STANDARD:
-        // todo:: implement
-        break;
       case CUSTOM_MAPPING:
         String reasonCustomMapping = "Custom mapping is selected";
         if (!containsMacro(NAME_MAPPING)) {

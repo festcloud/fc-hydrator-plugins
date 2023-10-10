@@ -34,7 +34,7 @@ public enum MappingType {
    * Returns the MappingType.
    *
    * @param value the value is string type.
-   * @return The AuthType
+   * @return The MappingType
    */
   public static MappingType fromValue(String value) {
     return Arrays.stream(MappingType.values()).filter(authtype -> authtype.getValue().equals(value))

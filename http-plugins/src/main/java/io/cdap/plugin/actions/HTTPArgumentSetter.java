@@ -86,7 +86,6 @@ public class HTTPArgumentSetter extends Action {
     handleResponse(context, body);
   }
 
-  //  @Override
   protected void handleResponse(ActionContext context, String body) {
 
     switch (config.getMappingType()) {

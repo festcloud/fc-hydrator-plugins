@@ -50,12 +50,9 @@ public class HttpClient implements Closeable {
   private final StringEntity requestBody;
   private CloseableHttpClient httpClient;
 
-//  private AccessToken accessToken;
-
   public HttpClient(HTTPArgumentSetterConfig config) {
     this.config = config;
     this.headers = config.getRequestHeadersMap();
-//    this.accessToken = null;
 
     String requestBodyString = config.getBody();
     if (requestBodyString != null) {
@@ -101,13 +98,10 @@ public class HttpClient implements Closeable {
   @VisibleForTesting
   public CloseableHttpClient createHttpClient(String pageUriStr) throws IOException {
     HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-//    httpClientBuilder.setSSLSocketFactory(new SSLConnectionSocketFactoryCreator(config).create());
 
     // set timeouts
     Long connectTimeoutMillis = TimeUnit.SECONDS.toMillis(config.getConnectTimeout());
-//    Long readTimeoutMillis = TimeUnit.SECONDS.toMillis(config.getReadTimeout());
     RequestConfig.Builder requestBuilder = RequestConfig.custom();
-//    requestBuilder.setSocketTimeout(readTimeoutMillis.intValue());
     requestBuilder.setConnectTimeout(connectTimeoutMillis.intValue());
     requestBuilder.setConnectionRequestTimeout(connectTimeoutMillis.intValue());
     httpClientBuilder.setDefaultRequestConfig(requestBuilder.build());
@@ -122,17 +116,6 @@ public class HttpClient implements Closeable {
       credentialsProvider.setCredentials(authScope,
           new UsernamePasswordCredentials(config.getUsername(), config.getPassword()));
     }
-
-    // proxy and proxy auth
-//    if (!Strings.isNullOrEmpty(config.getProxyUrl())) {
-//      HttpHost proxyHost = HttpHost.create(config.getProxyUrl());
-//      if (!Strings.isNullOrEmpty(config.getProxyUsername()) && !Strings.isNullOrEmpty(config.getProxyPassword())) {
-//        credentialsProvider.setCredentials(new AuthScope(proxyHost),
-//                                           new UsernamePasswordCredentials(
-//                                             config.getProxyUsername(), config.getProxyPassword()));
-//      }
-//      httpClientBuilder.setProxy(proxyHost);
-//    }
     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
 
     return httpClientBuilder.build();
