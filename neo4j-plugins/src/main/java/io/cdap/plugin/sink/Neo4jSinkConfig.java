@@ -18,7 +18,6 @@ package io.cdap.plugin.sink;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
@@ -28,7 +27,7 @@ import io.cdap.plugin.common.ConfigUtil;
 import io.cdap.plugin.common.Constants;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.connector.Neo4jConnectorConfig;
-import io.cdap.plugin.sink.objects.RelationObj;
+import io.cdap.plugin.sink.objects.RelationDto;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -45,10 +44,6 @@ import static io.cdap.plugin.common.Neo4jConstants.RELATIONS;
  * Neo4j CDAP Sink config
  */
 public class Neo4jSinkConfig extends PluginConfig {
-
-
-    private static final Set<String> DIRECTIONS = ImmutableSet.of(">", "<");
-
     @Name(Constants.Reference.REFERENCE_NAME)
     @Description(Constants.Reference.REFERENCE_NAME_DESCRIPTION)
     public String referenceName;
@@ -75,14 +70,18 @@ public class Neo4jSinkConfig extends PluginConfig {
     private String relations;
 
 
-    public void validate(FailureCollector collector) {
+    public void validate(FailureCollector collector, List<String> allowedElements) {
         IdUtils.validateReferenceName(referenceName, collector);
         ConfigUtil.validateConnection(this, useConnection, connection, collector);
+        validateRelations(allowedElements);
     }
 
+    private void validateRelations(List<String> allowedElements) {
+        // TODO: add implementation, separate responsibility in the method below
+    }
 
-    public List<RelationObj> getRelations(List<String> allowedElements) {
-        List<RelationObj> result = new ArrayList<>();
+    public List<RelationDto> getRelations() {
+        List<RelationDto> result = new ArrayList<>();
         if (containsMacro(RELATIONS) || Strings.isNullOrEmpty(relations)) {
             return result;
         }
@@ -98,25 +97,29 @@ public class Neo4jSinkConfig extends PluginConfig {
                 String direction = matcher.group(2);
                 String belongs = matcher.group(1);
 
-                if (!allowedElements.contains(elementName)) {
-                    throw new IllegalArgumentException(String.format("Cannot create relations with not allowed Element Name '%s'.", elementName));
-                }
+                /*if (!allowedElements.contains(elementName)) {
+                    throw new IllegalArgumentException(
+                            String.format("Cannot create relations with not allowed Element Name '%s'.", elementName));
+                }*/
 
                 if (relationsName.contains(elementName)) {
-                    throw new IllegalArgumentException(String.format("Cannot create relations with the same name '%s'.", elementName));
+                    throw new IllegalArgumentException(
+                            String.format("Cannot create relations with the same name '%s'.", elementName));
                 }
 
                 relationsName.add(elementName);
-                RelationObj relationObj = RelationObj.RelationObjBuilder.aRelationObj().withElementName(elementName).withDirection(direction).withBelongs(belongs).build();
-                result.add(relationObj);
+                RelationDto relationDto = RelationDto.RelationDtoBuilder.aRelationObj()
+                        .withElementName(elementName)
+                        .withDirection(direction)
+                        .withRelationName(belongs)
+                        .build();
+                result.add(relationDto);
             } else {
-                throw new IllegalArgumentException(String.format("Cannot create relations with the same name '%s'.", relationStr));
+                throw new IllegalArgumentException(
+                        String.format("Cannot create relations with the same name '%s'.", relationStr));
 
             }
-
-
         }
-
         return result;
     }
 

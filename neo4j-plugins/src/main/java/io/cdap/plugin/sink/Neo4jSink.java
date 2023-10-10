@@ -34,7 +34,7 @@ import io.cdap.cdap.etl.api.connector.Connector;
 import io.cdap.plugin.common.ReferenceBatchSink;
 import io.cdap.plugin.common.ReferencePluginConfig;
 import io.cdap.plugin.connector.Neo4jConnector;
-import io.cdap.plugin.sink.objects.RelationObj;
+import io.cdap.plugin.sink.objects.RelationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,9 +43,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
+import static io.cdap.plugin.common.Neo4jConstants.RELATIONS;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
 import static io.cdap.plugin.common.Neo4jConstants.USER;
 
@@ -61,7 +63,6 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jSink.class);
 
     private final Neo4jSinkConfig config;
-    private List<RelationObj> relations;
 
     public Neo4jSink(Neo4jSinkConfig config) {
         super(new ReferencePluginConfig(config.getReferenceName()));
@@ -73,9 +74,8 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
         LOG.info("Call configurePipeline function");
         super.configurePipeline(pipelineConfigurer);
         FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
-        config.validate(collector);
         Schema inputSchema = Objects.requireNonNull(pipelineConfigurer.getStageConfigurer().getInputSchema());
-        relations = config.getRelations(getRecordNames(inputSchema));
+        config.validate(collector, getRecordNames(inputSchema));
         super.configurePipeline(pipelineConfigurer);
 
     }
@@ -84,9 +84,9 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     public void prepareRun(BatchSinkContext context) throws Exception {
         LOG.info("Call prepareRun function");
         FailureCollector collector = context.getFailureCollector();
-        config.validate(collector);
         Schema inputSchema = Objects.requireNonNull(context.getInputSchema());
-        relations = config.getRelations(getRecordNames(inputSchema));
+        config.validate(collector, getRecordNames(inputSchema));
+        //relations = config.getRelations(getRecordNames(inputSchema));
         collector.getOrThrowException();
         context.addOutput(Output.of(config.getReferenceName(), new Neo4jOutputFormatProvider(config)));
     }
@@ -99,14 +99,18 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     }
 
     private List<String> getRecordNames(Schema inputSchema) {
-        List<String> recordNames = new ArrayList<>();
+        /*List<String> recordNames = new ArrayList<>();
         List<Field> fields = inputSchema.getFields();
         for (Field field : fields) {
             if (Schema.Type.RECORD == field.getSchema().getType()) {
                 recordNames.add(field.getName());
             }
         }
-        return recordNames;
+        return recordNames;*/
+        // TODO: add handling all types like records, unions, arrays. The metadata filed value has to be taken here
+        return inputSchema.getFields().stream()
+                .map(Field::getName)
+                .collect(Collectors.toList());
     }
 
     private static class Neo4jOutputFormatProvider implements OutputFormatProvider {
@@ -128,6 +132,8 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
             configMap.put(USER, config.getUser());
             configMap.put(PASSWORD, config.getPassword());
             configMap.put(DATABASE, config.getDatabase());
+            List<RelationDto> relations = config.getRelations();
+            configMap.put(RELATIONS, RelationUtils.serialize(relations));
             return configMap;
         }
     }

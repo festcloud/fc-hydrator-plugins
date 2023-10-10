@@ -17,6 +17,7 @@
 package io.cdap.plugin.sink;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
+import io.cdap.plugin.sink.objects.RelationDto;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.neo4j.driver.Record;
@@ -25,18 +26,22 @@ import org.neo4j.driver.types.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * Neo4j CDAP Sink record writer
  */
 public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, StructuredRecord> {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jRecordWriter.class);
-    private static final String ID = "UID";
+    private static final String ID = "uid";
 
     private final Session session;
     private final Neo4jDataService dataService;
+    private final List<RelationDto> relationDtoList;
 
-    public Neo4jRecordWriter(Session session) {
+    public Neo4jRecordWriter(Session session, List<RelationDto> relationDtoList) {
         this.session = session;
+        this.relationDtoList = relationDtoList;
         dataService = new Neo4jDataService(session);
     }
 
@@ -51,7 +56,7 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, Structured
                 LOG.error("Node with id {} was not updated", uid);
             }
         } else {
-            Node newNode = dataService.createNode(value);
+            Node newNode = dataService.createNode(value, relationDtoList);
             if (newNode == null) {
                 LOG.error("Node creation process has failed");
             }

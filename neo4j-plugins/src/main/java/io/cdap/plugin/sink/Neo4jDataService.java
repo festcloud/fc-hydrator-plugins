@@ -18,6 +18,7 @@ package io.cdap.plugin.sink;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.sink.objects.RelationDto;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
@@ -26,11 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static io.cdap.plugin.sink.CypherQueryBuilder.generateMatchStatements;
 import static io.cdap.plugin.sink.CypherQueryBuilder.generateMergeQuery;
+import static io.cdap.plugin.sink.CypherQueryBuilder.generateMergeRelations;
 import static io.cdap.plugin.sink.CypherQueryBuilder.processPropertyIntoQuery;
 
 /**
@@ -39,6 +40,8 @@ import static io.cdap.plugin.sink.CypherQueryBuilder.processPropertyIntoQuery;
 public class Neo4jDataService {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jDataService.class);
     private static final String EQUAL = "=";
+    private static final String SPACE = " ";
+
 
     private final Session session;
 
@@ -102,7 +105,6 @@ public class Neo4jDataService {
         });
     }
 
-    private static final String RELATION_MAPPING = "(холдинг)<-[:Належить]-(m)";
     /**
      * MATCH (a {name: 'Oliver Stone'})
      * MATCH (b {name: 'Marian M'})
@@ -111,26 +113,21 @@ public class Neo4jDataService {
      * MERGE (b)<-[:BELONGS]-(m)
      * RETURN m
      */
-    public Node createNode(StructuredRecord input) {
+    public Node createNode(StructuredRecord input, List<RelationDto> relationDtoList) {
         LOG.info("Create new node from");
-        StringBuilder queryBuilder = new StringBuilder();
-        Map<String, String> matchStatements = generateMatchStatements(input);
-        if (matchStatements.size() > 0) {
-            matchStatements.values().forEach(queryBuilder::append);
-        }
-        String mergeQuery = generateMergeQuery(input);
-        queryBuilder.append(mergeQuery);
-        matchStatements.keySet().forEach(key -> {
-            if (RELATION_MAPPING.contains(key)) {
-                queryBuilder.append("MERGE ").append(RELATION_MAPPING);
-            }
-        });
-        queryBuilder.append(" RETURN m");
-        final String query = queryBuilder.toString();
+        final String query = String.join(SPACE, String.join(SPACE, generateMatchStatements(input)),
+                generateMergeQuery(input),
+                generateMergeRelations(relationDtoList),
+                "RETURN m");
         LOG.info(query);
         return session.writeTransaction(tx -> {
-            Result result = tx.run(query);
-            return result.single().get(0).asNode();
+            try {
+                Result result = tx.run(query);
+                return result.single().get(0).asNode();
+            } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
+                return null;
+            }
         });
     }
 }

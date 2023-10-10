@@ -18,17 +18,15 @@ package io.cdap.plugin.sink;
 
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.sink.objects.RelationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * {
@@ -55,66 +53,72 @@ import java.util.regex.Pattern;
 public class CypherQueryBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(CypherQueryBuilder.class);
     private static final String COLON = ":";
-    private static final Pattern NODES_PATTERN = Pattern.compile("\\((\\w+)\\)");
-    private static final Pattern RELATION_PATTERN = Pattern.compile("\\)([-<>]\\[:\\w+\\][-><]+)\\(");
-    public static final String[] FIELD_METADATA = new String[]{"Metadata", "ОбєктМетаданих"};
-    public static final String[] FIELD_UID = new String[]{"UID", "УІД"};
+    private static final String LEFT_RELATION = "<";
+    private static final String RIGHT_RELATION = ">";
+    public static final String FIELD_METADATA = "metadata";
+    public static final String FIELD_UID = "uid";
 
-
-    public static void parseCypherMapping(String cypherMapping) {
-        Matcher nodesMatcher = NODES_PATTERN.matcher(cypherMapping);
-        List<String> nodes = new ArrayList<>();
-        while (nodesMatcher.find()) {
-            nodes.add(nodesMatcher.group(1));
-        }
-
-        Matcher relationMatcher = RELATION_PATTERN.matcher(cypherMapping);
-        List<String> relations = new ArrayList<>();
-        while (relationMatcher.find()) {
-            relations.add(relationMatcher.group(1));
-        }
-
-        System.out.println(nodes);
-        System.out.println(relations);
+    // MERGE (a)<-[:BELONGS]-(m)
+    public static String generateMergeRelations(List<RelationDto> relationDtoList) {
+        return relationDtoList.stream().map(relationDto -> {
+            if (LEFT_RELATION.equals(relationDto.getDirection())) {
+                return String.join("",
+                        "MERGE (", relationDto.getElementName(), ")-[:", relationDto.getRelationName(), "]->(m)");
+            } else if (RIGHT_RELATION.equals(relationDto.getDirection())) {
+                return  String.join("",
+                        "MERGE (", relationDto.getElementName(), ")<-[:", relationDto.getRelationName(), "]-(m)");
+            } else {
+                return  String.join("",
+                        "MERGE (", relationDto.getElementName(), ")-[:", relationDto.getRelationName(), "]-(m)");
+            }
+        }).collect(Collectors.joining(" "));
     }
 
-    public static Map<String, String> generateMatchStatements(StructuredRecord input) {
+    public static List<String> generateMatchStatements(StructuredRecord input) {
         Objects.requireNonNull(input.getSchema());
         Objects.requireNonNull(input.getSchema().getFields());
 
-        Map<String, String> matchStatements = new HashMap<>();
+        List<String> matchStatements = new ArrayList<>();
         for (Schema.Field field : input.getSchema().getFields()) {
             if (Schema.Type.RECORD.equals(field.getSchema().getType())) {
                 LOG.info("Process RECORD");
-                Object fieldValue = input.get(field.getName());
+                String fieldName = field.getName();
+                Object fieldValue = input.get(fieldName);
                 if (fieldValue instanceof Collection) {
-                    matchStatements.putAll(generateMatchStatementFromArray(input, field));
+                    matchStatements.addAll(generateMatchStatementFromArray(input, field));
                 } else if (fieldValue instanceof StructuredRecord) {
                     StructuredRecord structuredFieldValue = (StructuredRecord) fieldValue;
-                    String metadataLabel = getMetadataLabel(structuredFieldValue);
-                    if (metadataLabel != null) {
-                        String matchStatement = recordToMatchStatement(structuredFieldValue,
-                                metadataLabel.toLowerCase());
-                        matchStatements.put(metadataLabel.toLowerCase(), matchStatement);
-                    }
+                    String matchStatement = recordToMatchStatement(structuredFieldValue, fieldName);
+                    matchStatements.add(matchStatement);
                 }
             } else if (Schema.Type.ARRAY.equals(field.getSchema().getType())) {
                 LOG.info("Process ARRAY");
-                matchStatements.putAll(generateMatchStatementFromArray(input, field));
+                matchStatements.addAll(generateMatchStatementFromArray(input, field));
+            } else if (Schema.Type.UNION.equals(field.getSchema().getType())) {
+                if (Schema.Type.RECORD.equals(field.getSchema().getNonNullable().getType())) {
+                    LOG.info("Process UNION");
+                    String fieldName = field.getName();
+                    Object fieldValue = input.get(fieldName);
+                    if (fieldValue instanceof Collection) {
+                        matchStatements.addAll(generateMatchStatementFromArray(input, field));
+                    } else if (fieldValue instanceof StructuredRecord) {
+                        StructuredRecord structuredFieldValue = (StructuredRecord) fieldValue;
+                        String matchStatement = recordToMatchStatement(structuredFieldValue, fieldName);
+                        matchStatements.add(matchStatement);
+                    }
+                }
             }
         }
         return matchStatements;
     }
 
-    private static Map<String, String> generateMatchStatementFromArray(StructuredRecord input, Schema.Field field) {
-        Map<String, String> matchStatements = new HashMap<>();
-        for (Object inner : ((Collection) Objects.requireNonNull(input.get(field.getName())))) {
+    private static List<String> generateMatchStatementFromArray(StructuredRecord input, Schema.Field field) {
+        List<String> matchStatements = new ArrayList<>();
+        String fieldName = field.getName();
+        for (Object inner : ((Collection) Objects.requireNonNull(input.get(fieldName)))) {
             if (inner instanceof StructuredRecord) {
-                String metadataLabel = getMetadataLabel((StructuredRecord) inner);
-                if (metadataLabel != null) {
-                    String matchStatement = recordToMatchStatement((StructuredRecord) inner, metadataLabel.toLowerCase());
-                    matchStatements.put(metadataLabel.toLowerCase(), matchStatement);
-                }
+                String matchStatement = recordToMatchStatement((StructuredRecord) inner, fieldName);
+                matchStatements.add(matchStatement);
             }
         }
         return matchStatements;
@@ -123,7 +127,7 @@ public class CypherQueryBuilder {
     public static String generateMergeQuery(StructuredRecord input) {
         Objects.requireNonNull(input.getSchema());
         Objects.requireNonNull(input.getSchema().getFields());
-        Object metadata = getMetadataLabel(input);
+        Object metadata = input.get(FIELD_METADATA);
         StringBuilder queryBuilder = new StringBuilder("MERGE (m:" + metadata + " {");
         List<String> ownProperties = new ArrayList<>();
         for (Schema.Field field : input.getSchema().getFields()) {
@@ -132,9 +136,11 @@ public class CypherQueryBuilder {
                 ownProperties.add(
                         processPropertyIntoQuery(input, field, field.getSchema().getType(), COLON, false));
             } else if (Schema.Type.UNION.equals(field.getSchema().getType())) {
-                ownProperties.add(
-                        processPropertyIntoQuery(input, field, field.getSchema().getNonNullable().getType(),
-                                COLON, false));
+                if (field.getSchema().getNonNullable().getType().isSimpleType()) {
+                    ownProperties.add(
+                            processPropertyIntoQuery(input, field, field.getSchema().getNonNullable().getType(),
+                                    COLON, false));
+                }
             }
         }
         queryBuilder.append(String.join(",", ownProperties));
@@ -159,8 +165,8 @@ public class CypherQueryBuilder {
     }
 
     private static String recordToMatchStatement(StructuredRecord record, String label) {
-        String matchStatementTemplate = "MATCH (%s {UID: '%s'})";
-        String idFieldValue = getRecordId(record);
+        String matchStatementTemplate = "MATCH (%s {uid: '%s'})";
+        String idFieldValue = record.get(FIELD_UID);
         if (idFieldValue != null) {
             return String.format(matchStatementTemplate, label, idFieldValue);
         } else {
@@ -168,27 +174,5 @@ public class CypherQueryBuilder {
             // TODO: possibly throw an error
             return null;
         }
-    }
-
-    private static String getRecordId(StructuredRecord record) {
-        for (String idField : FIELD_UID) {
-            Object idValue = record.get(idField);
-            if (idValue != null) {
-                return idValue.toString();
-            }
-        }
-        return null;
-    }
-
-    private static String getMetadataLabel(StructuredRecord input) {
-        for (String metadataField : FIELD_METADATA) {
-            Object metadataValue = input.get(metadataField);
-            if (metadataValue != null) {
-                return metadataValue.toString();
-            }
-        }
-        LOG.error("No label with names: {} found in: {}", FIELD_METADATA, input.getSchema());
-        // TODO: possibly throw an error
-        return null;
     }
 }

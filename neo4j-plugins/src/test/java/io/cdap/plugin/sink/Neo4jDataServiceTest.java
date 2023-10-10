@@ -51,7 +51,7 @@ public class Neo4jDataServiceTest {
                     Schema.of(Schema.Type.STRING))),
             Schema.Field.of("IsSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.BOOLEAN))));
-    private static final Schema INNTER_SCHEMA = Schema.recordOf(
+    private static final Schema INNER_SCHEMA = Schema.recordOf(
             "Holding",
             Schema.Field.of("ОбєктМетаданих", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
@@ -59,16 +59,23 @@ public class Neo4jDataServiceTest {
                     Schema.of(Schema.Type.STRING))),
             Schema.Field.of("Імя", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))));
+
+    private static final Schema INNER_SCHEMA_ENG = Schema.recordOf(
+            "Holding",
+            Schema.Field.of("metadata", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("uid", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))));
     private static final Schema BODY_WITH_CHILD_SCHEMA = Schema.recordOf(
             "Dictionary",
-            Schema.Field.of("Metadata", Schema.unionOf(Schema.of(Schema.Type.NULL),
+            Schema.Field.of("metadata", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
-            Schema.Field.of("UID", Schema.unionOf(Schema.of(Schema.Type.NULL),
+            Schema.Field.of("uid", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
-            Schema.Field.of("Name", Schema.unionOf(Schema.of(Schema.Type.NULL),
+            Schema.Field.of("name", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.STRING))),
-            Schema.Field.of("InnerObject", INNTER_SCHEMA),
-            Schema.Field.of("IsSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
+            Schema.Field.of("holding", INNER_SCHEMA_ENG),
+            Schema.Field.of("isSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.BOOLEAN))));
 
     @Test
@@ -81,33 +88,32 @@ public class Neo4jDataServiceTest {
                 .set("IsSomething", false)
                 .build();
 
-        dataService.createNode(input);
+        dataService.createNode(input, null);
     }
 
     @Test
     @Ignore
     public void createWithRelation() throws IOException {
-        StructuredRecord inner = StructuredRecord.builder(Schema.parseJson(INNTER_SCHEMA.toString()))
-                .set("ОбєктМетаданих", "Холдинг")
-                .set("УІД", "1111111111")
-                .set("Імя", "Бізнес")
+        StructuredRecord inner = StructuredRecord.builder(Schema.parseJson(INNER_SCHEMA_ENG.toString()))
+                .set("metadata", "Холдинг")
+                .set("uid", "1111111111")
                 .build();
         StructuredRecord inputWithList = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
-                .set("Metadata", "Альянс")
-                .set("UID", "333333333")
-                .set("Name", "Група")
-                .set("InnerObject", Collections.singletonList(inner))
-                .set("IsSomething", false)
+                .set("metadata", "Альянс")
+                .set("uid", "333333333")
+                .set("name", "Група")
+                .set("holding", Collections.singletonList(inner))
+                .set("isSomething", false)
                 .build();
-        //dataService.createNode(inputWithList);
+        dataService.createNode(inputWithList, RelationUtils.deserializeList("holding|<|belongs"));
         StructuredRecord inputWithObject = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
-                .set("Metadata", "Альянс")
-                .set("UID", "333333333")
-                .set("Name", "Група")
-                .set("InnerObject", inner)
-                .set("IsSomething", false)
+                .set("metadata", "Альянс")
+                .set("uid", "333333333")
+                .set("name", "Група")
+                .set("holding", inner)
+                .set("isSomething", false)
                 .build();
-        dataService.createNode(inputWithObject);
+        dataService.createNode(inputWithObject, RelationUtils.deserializeList("holding|<|belongs"));
     }
 
     @Test
