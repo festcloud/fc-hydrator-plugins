@@ -24,6 +24,7 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.Emitter;
 import io.cdap.cdap.etl.api.InvalidEntry;
+import io.cdap.cdap.etl.api.PipelineConfigurer;
 import io.cdap.cdap.etl.api.Transform;
 import io.cdap.cdap.etl.api.TransformContext;
 import io.cdap.plugin.sink.Neo4jDataService;
@@ -33,8 +34,11 @@ import org.neo4j.driver.GraphDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -46,11 +50,14 @@ import java.util.stream.Collectors;
 public class MdmLookupTransformer extends Transform<StructuredRecord, StructuredRecord> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MdmLookupTransformer.class);
+    private static final Integer ERROR_CODE = 42;
 
     private final LookupConfig config;
     private Neo4jDataService dataService;
     private String lookupColumn;
     private Driver driver;
+    private Schema outSchema;
+
 
     public MdmLookupTransformer(LookupConfig config) {
         this.config = config;
@@ -58,41 +65,56 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
 
     @Override
     public void transform(StructuredRecord input, Emitter<StructuredRecord> emitter) {
-        List<String> lookupData = new ArrayList<>();
-        for (Schema.Field field : input.getSchema().getFields()) {
-            processField(input, lookupData, field, false);
-        }
+        Objects.requireNonNull(input.getSchema());
+        Objects.requireNonNull(input.getSchema().getFields());
 
-        final List<String> notFoundList = lookupData.stream()
-            .filter(uuid -> dataService.getUniqueNodeByProperty(lookupColumn, uuid) == null)
-            .collect(Collectors.toList());
+        List<String> missedIds = input.getSchema().getFields().stream()
+                .flatMap(field -> {
+                    List<String> ids = new ArrayList<>();
+                    if (Schema.Type.ARRAY.equals(field.getSchema().getType())) {
+                        for (Object inner : ((Collection) Objects.requireNonNull(input.get(field.getName())))) {
+                            if (inner instanceof StructuredRecord) {
+                                ids.add(getIdValue((StructuredRecord) inner, field));
+                            }
+                        }
+                    } else if (Schema.Type.RECORD.equals(field.getSchema().getType())) {
+                        ids.add(getIdValue(input, field));
+                    } else if (Schema.Type.UNION.equals(field.getSchema().getType())) {
+                        if (Schema.Type.RECORD.equals(field.getSchema().getNonNullable().getType())) {
+                            ids.add(getIdValue(input, field));
+                        }
+                    }
+                    return ids.stream();
+                })
+                .filter(Objects::nonNull)
+                .filter(uid -> dataService.getUniqueNodeByProperty(lookupColumn, uid) == null)
+                .peek(uid -> {
+                    LOG.info("Integrity validation failed for: {}", uid);
+                    emitter.emitError(new InvalidEntry<>(ERROR_CODE, uid, input));
+                })
+                .collect(Collectors.toList());
 
-        if (!notFoundList.isEmpty()) {
-            notFoundList.forEach(uuid -> emitter.emitError(
-                new InvalidEntry<>(1, uuid, input)));
-        } else {
+        if (missedIds.isEmpty()) {
+            LOG.info("Integrity validation passed");
             emitter.emit(input);
         }
     }
 
-    private void processField(StructuredRecord input, List<String> lookupData,
-                              Schema.Field field, Boolean isChildRecord) {
-
-        if (Schema.Type.ARRAY.equals(field.getSchema().getType())) {
-            for (Schema.Field childField : field.getSchema().getComponentSchema().getFields()) {
-                List<StructuredRecord> structuredRecordList = input.get(field.getName());
-                processField(structuredRecordList.get(0), lookupData, childField, true);
-            }
-        } else if (field.getSchema().getType().isSimpleType() && isChildRecord) {
-            LOG.info("It's simple type");
-            if (field.getName().equals(lookupColumn)) {
-                lookupData.add(processProperty(input, field));
-            }
+    private String getIdValue(StructuredRecord input, Schema.Field field) {
+        Object fieldValue = input.get(field.getName());
+        StructuredRecord structuredFieldValue = (StructuredRecord) fieldValue;
+        if (structuredFieldValue != null) {
+            return structuredFieldValue.get(lookupColumn);
+        } else {
+            return null;
         }
     }
 
-    private String processProperty(StructuredRecord input, Schema.Field field) {
-        return input.get(field.getName());
+    @Override
+    public void configurePipeline(PipelineConfigurer pipelineConfigurer) {
+        super.configurePipeline(pipelineConfigurer);
+        Schema schema = pipelineConfigurer.getStageConfigurer().getInputSchema();
+        pipelineConfigurer.getStageConfigurer().setOutputSchema(schema);
     }
 
     @Override

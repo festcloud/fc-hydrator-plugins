@@ -42,7 +42,6 @@ public class Neo4jDataService {
     private static final String EQUAL = "=";
     private static final String SPACE = " ";
 
-
     private final Session session;
 
     public Neo4jDataService(Session session) {
