@@ -3,6 +3,13 @@ steps:
   entrypoint: 'mvn'
   args: ['package','-Dmaven.test.skip=true']
   dir: $_FOLDER
+- name: 'maven:3.3-jdk-8'
+  entrypoint: 'sh'
+  args:
+          - "-c"
+          - |
+            mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate-Dexpression=project.version -q -DforceStdout > version.txt
+  dir: $_FOLDER
 - name: gcr.io/cloud-builders/gcloud
   entrypoint: "bash"
   args:
@@ -13,16 +20,16 @@ steps:
               curl -X POST \
                 -H "Authorization: Bearer $(gcloud auth print-access-token)" \
                 -H "Artifact-Extends: system:cdap-data-pipeline[6.8.0-SNAPSHOT,7.0.0-SNAPSHOT)/system:cdap-data-streams[6.8.0-SNAPSHOT,7.0.0-SNAPSHOT)" \
-                --data-binary @$_FOLDER/target/neo4j-plugins-$_VERSION.jar \
+                -H "Artifact-Version: $(cat $_FOLDER/version.txt)" \
+                --data-binary @$_FOLDER/target/neo4j-plugins-$(cat $_FOLDER/version.txt).jar \
                 $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER
 
               #Deploy widget to datafusion
 
               curl -X POST \
                 -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-                --data-binary @$_FOLDER/target/neo4j-plugins-$_VERSION.json \
+                --data-binary @$_FOLDER/target/neo4j-plugins-$(cat $_FOLDER/version.txt).json \
                 $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER/versions/$_DF_VERSION/properties/
-
 artifacts:
   mavenArtifacts:
   - repository: 'https://$LOCATION-maven.pkg.dev/gcp-lab-datafusion-poc/gcp-lab-datafusion-poc-ar-mvn'
