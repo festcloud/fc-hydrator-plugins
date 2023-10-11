@@ -74,7 +74,7 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
         LOG.info("Call configurePipeline function");
         super.configurePipeline(pipelineConfigurer);
         FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
-        Schema inputSchema = Objects.requireNonNull(pipelineConfigurer.getStageConfigurer().getInputSchema());
+        Schema inputSchema = pipelineConfigurer.getStageConfigurer().getInputSchema();
         config.validate(collector, getRecordNames(inputSchema));
         super.configurePipeline(pipelineConfigurer);
 
@@ -84,7 +84,7 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     public void prepareRun(BatchSinkContext context) throws Exception {
         LOG.info("Call prepareRun function");
         FailureCollector collector = context.getFailureCollector();
-        Schema inputSchema = Objects.requireNonNull(context.getInputSchema());
+        Schema inputSchema = context.getInputSchema();
         config.validate(collector, getRecordNames(inputSchema));
         //relations = config.getRelations(getRecordNames(inputSchema));
         collector.getOrThrowException();
@@ -99,6 +99,9 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     }
 
     private List<String> getRecordNames(Schema inputSchema) {
+        if (inputSchema == null){
+            return new ArrayList<>();
+        }
         /*List<String> recordNames = new ArrayList<>();
         List<Field> fields = inputSchema.getFields();
         for (Field field : fields) {
