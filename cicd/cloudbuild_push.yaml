@@ -29,7 +29,7 @@ steps:
               curl -X POST \
                 -H "Authorization: Bearer $(gcloud auth print-access-token)" \
                 --data-binary @$_FOLDER/target/neo4j-plugins-$(cat $_FOLDER/version.txt).json \
-                $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER/versions/$_DF_VERSION/properties/
+                $_INSTANCE_URL/api/v3/namespaces/$_NAMESPACE/artifacts/$_FOLDER/versions/$(cat $_FOLDER/version.txt)/properties/
 artifacts:
   mavenArtifacts:
   - repository: 'https://$LOCATION-maven.pkg.dev/gcp-lab-datafusion-poc/gcp-lab-datafusion-poc-ar-mvn'
@@ -46,5 +46,3 @@ options:
 substitutions:
   _FOLDER: neo4j-plugins
   _INSTANCE_URL: https://fest-instance-gcp-lab-datafusion-poc-dot-euw4.datafusion.googleusercontent.com
-  _VERSION: 2.12.0-SNAPSHOT
-  _DF_VERSION: 2.12.0.SNAPSHOT
