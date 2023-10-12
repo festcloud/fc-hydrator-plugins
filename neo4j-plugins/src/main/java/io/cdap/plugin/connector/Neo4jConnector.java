@@ -20,6 +20,7 @@ import io.cdap.cdap.api.annotation.Category;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.annotation.Plugin;
+import io.cdap.cdap.etl.api.Transform;
 import io.cdap.cdap.etl.api.batch.BatchSink;
 import io.cdap.cdap.etl.api.connector.BrowseDetail;
 import io.cdap.cdap.etl.api.connector.BrowseEntity;
@@ -114,6 +115,7 @@ public class Neo4jConnector implements Connector {
         properties.put(ConfigUtil.NAME_CONNECTION, path.getConnectionWithMacro());
         return ConnectorSpec.builder()
                 .addRelatedPlugin(new PluginSpec(NAME, BatchSink.PLUGIN_TYPE, properties))
+                .addRelatedPlugin(new PluginSpec(NAME, Transform.PLUGIN_TYPE, properties))
                 .addSupportedSampleType(SampleType.RANDOM)
                 .addSupportedSampleType(SampleType.STRATIFIED)
                 .build();

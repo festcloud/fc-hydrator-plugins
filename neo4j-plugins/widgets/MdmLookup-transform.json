@@ -7,29 +7,84 @@
             "label": "MDM lookup Configuration",
             "properties": [
                 {
+                    "widget-type": "toggle",
+                    "label": "Use connection",
+                    "name": "useConnection",
+                    "widget-attributes": {
+                        "on": {
+                            "value": "true",
+                            "label": "YES"
+                        },
+                        "off": {
+                            "value": "false",
+                            "label": "NO"
+                        },
+                        "default": "false"
+                    }
+                },
+                {
+                    "widget-type": "connection-select",
+                    "label": "Connection select ",
+                    "name": "connection"
+                },
+                {
                     "widget-type": "textbox",
                     "label": "Neo4j user name",
-                    "name": "userName"
+                    "name": "user"
                 },
                 {
                     "widget-type": "password",
                     "label": "Neo4j user password",
-                    "name": "userPassword"
+                    "name": "password"
                 },
                 {
                     "widget-type": "textbox",
                     "label": "Neo4j URI",
-                    "name": "databaseHost"
+                    "name": "url"
                 },
                 {
                     "widget-type": "textbox",
-                    "label": "database",
+                    "label": "Database Name",
                     "name": "database"
                 },
                 {
                     "widget-type": "textbox",
                     "label": "Any uniq identifier we’d like to validate in MDM",
                     "name": "columName"
+                }
+            ]
+        }
+    ],
+    "filters": [
+        {
+            "name": "showConnectionProperties ",
+            "condition": {
+                "expression": "useConnection == false"
+            },
+            "show": [
+                {
+                    "type": "property",
+                    "name": "url"
+                },
+                {
+                    "type": "property",
+                    "name": "user"
+                },
+                {
+                    "type": "property",
+                    "name": "password"
+                }
+            ]
+        },
+        {
+            "name": "showConnectionId",
+            "condition": {
+                "expression": "useConnection == true"
+            },
+            "show": [
+                {
+                    "type": "property",
+                    "name": "connection"
                 }
             ]
         }

@@ -30,17 +30,17 @@
         },
         {
           "widget-type": "textbox",
-          "label": "Connection URL",
+          "label": "Neo4j URI",
           "name": "url"
         },
         {
           "widget-type": "textbox",
-          "label": "Username Neo",
+          "label": "Neo4j user name",
           "name": "user"
         },
         {
           "widget-type": "password",
-          "label": "Password Neo",
+          "label": "Neo4j user password",
           "name": "password"
         }
       ]
@@ -88,7 +88,7 @@
         },
         {
           "widget-type": "textbox",
-          "label": "database",
+          "label": "Database Name",
           "name": "database"
         }
       ]

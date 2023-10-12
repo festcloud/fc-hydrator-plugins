@@ -23,10 +23,13 @@ import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.Emitter;
+import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.cdap.etl.api.InvalidEntry;
 import io.cdap.cdap.etl.api.PipelineConfigurer;
 import io.cdap.cdap.etl.api.Transform;
 import io.cdap.cdap.etl.api.TransformContext;
+import io.cdap.plugin.common.ConfigUtil;
+import io.cdap.plugin.connector.Neo4jConnectorConfig;
 import io.cdap.plugin.sink.Neo4jDataService;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
@@ -36,12 +39,14 @@ import org.neo4j.driver.SessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static io.cdap.plugin.common.Neo4jConstants.COLUM_NAME;
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 
 /**
@@ -147,49 +152,41 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
      */
     public static class LookupConfig extends PluginConfig {
 
-        @Name("userName")
-        @Description("User name for Neo4J database.")
+        @Name(ConfigUtil.NAME_CONNECTION)
         @Macro
-        private final String userName;
+        @Nullable
+        @Description("The connection to use.")
+        private Neo4jConnectorConfig connection;
 
-        @Name("userPassword")
-        @Description("User password for Neo4J database.")
-        @Macro
-        private final String userPassword;
+        @Name(ConfigUtil.NAME_USE_CONNECTION)
+        @Nullable
+        @Description("Whether to use an existing connection.")
+        private Boolean useConnection;
 
-        @Name("databaseHost")
-        @Description("<server_host>:<port>")
-        @Macro
-        private final String databaseURI;
-
-        @Name("columName")
+        @Name(COLUM_NAME)
         @Description("Any uniq identifier you would like to validate in MDM")
         @Macro
-        private final String columName;
+        private String columName;
 
         @Name(DATABASE)
         @Description("Database name to connect to")
         @Macro
-        private final String database;
+        private String database;
 
-        public LookupConfig(String userName, String userPassword, String databaseHost, String columName, String database) {
-            this.userName = userName;
-            this.userPassword = userPassword;
-            this.databaseURI = databaseHost;
-            this.columName = columName;
-            this.database = database;
+        public void validate(FailureCollector collector) {
+            ConfigUtil.validateConnection(this, useConnection, connection, collector);
         }
 
         public String getUserName() {
-            return userName;
+            return connection.getUser();
         }
 
         public String getUserPassword() {
-            return userPassword;
+            return connection.getPassword();
         }
 
         public String getDatabaseURI() {
-            return databaseURI;
+            return connection.getUrl();
         }
 
         public String getColumName() {

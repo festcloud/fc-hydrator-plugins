@@ -30,18 +30,18 @@ import static io.cdap.plugin.common.Neo4jConstants.USER;
  */
 public class Neo4jConnectorConfig extends PluginConfig {
     @Name(URL)
-    @Description("This option is required for this transform.")
+    @Description("<server_host>:<port>")
     @Macro
     private final String url;
 
     @Name(USER)
-    @Description("And this option is not.")
+    @Description("User name for Neo4J database.")
     @Macro
     private final String user;
 
 
     @Name(PASSWORD)
-    @Description("And this option is not.")
+    @Description("User password for Neo4J database.")
     @Macro
     private final String password;
 
