@@ -23,6 +23,11 @@
                 },
                 {
                     "widget-type": "textbox",
+                    "label": "database",
+                    "name": "database"
+                },
+                {
+                    "widget-type": "textbox",
                     "label": "Any uniq identifier we’d like to validate in MDM",
                     "name": "columName"
                 }

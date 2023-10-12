@@ -31,15 +31,18 @@ import io.cdap.plugin.sink.Neo4jDataService;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
 
 /**
  * MdmLookup plugin to verify if data present in MDM.
@@ -124,7 +127,9 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
         LOG.info("Init connection to MDM database");
         driver = GraphDatabase.driver(config.getDatabaseURI(),
             AuthTokens.basic(config.getUserName(), config.getUserPassword()));
-        dataService = new Neo4jDataService(driver.session());
+        SessionConfig sessionConfig = SessionConfig.builder().withDatabase(config.getDatabase()).build();
+        Session session = driver.session(sessionConfig);
+        dataService = new Neo4jDataService(session);
     }
 
     /**
@@ -162,11 +167,17 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
         @Macro
         private final String columName;
 
-        public LookupConfig(String userName, String userPassword, String databaseHost, String columName) {
+        @Name(DATABASE)
+        @Description("Database name to connect to")
+        @Macro
+        private final String database;
+
+        public LookupConfig(String userName, String userPassword, String databaseHost, String columName, String database) {
             this.userName = userName;
             this.userPassword = userPassword;
             this.databaseURI = databaseHost;
             this.columName = columName;
+            this.database = database;
         }
 
         public String getUserName() {
@@ -183,6 +194,10 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
 
         public String getColumName() {
             return columName;
+        }
+
+        public String getDatabase() {
+            return database;
         }
     }
 
