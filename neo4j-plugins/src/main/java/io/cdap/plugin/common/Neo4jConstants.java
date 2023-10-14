@@ -26,4 +26,5 @@ public interface Neo4jConstants {
     String DATABASE = "database";
     String COLUM_NAME = "columName";
     String RELATIONS = "relations";
+    String SCHEMA = "schema";
 }

@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static io.cdap.plugin.common.Neo4jConstants.COLUM_NAME;
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.SCHEMA;
 
 /**
  * MdmLookup plugin to verify if data present in MDM.
@@ -172,6 +173,11 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
         @Description("Database name to connect to")
         @Macro
         private String database;
+
+        @Name(SCHEMA)
+        @Description("Output schema")
+        @Macro
+        private String schema;
 
         public void validate(FailureCollector collector) {
             ConfigUtil.validateConnection(this, useConnection, connection, collector);
