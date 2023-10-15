@@ -88,7 +88,7 @@ public class Neo4jDataServiceTest {
                 .set("IsSomething", false)
                 .build();
 
-        dataService.createNode(input, null);
+        dataService.createNode(input, null, "nodeLabel");
     }
 
     @Test
@@ -105,7 +105,7 @@ public class Neo4jDataServiceTest {
                 .set("holding", Collections.singletonList(inner))
                 .set("isSomething", false)
                 .build();
-        dataService.createNode(inputWithList, RelationUtils.deserializeList("holding|<|belongs"));
+        dataService.createNode(inputWithList, RelationUtils.deserializeList("holding|<|belongs"), "nodeLabel");
         StructuredRecord inputWithObject = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
                 .set("metadata", "Альянс")
                 .set("uid", "333333333")
@@ -113,7 +113,7 @@ public class Neo4jDataServiceTest {
                 .set("holding", inner)
                 .set("isSomething", false)
                 .build();
-        dataService.createNode(inputWithObject, RelationUtils.deserializeList("holding|<|belongs"));
+        dataService.createNode(inputWithObject, RelationUtils.deserializeList("holding|<|belongs"), "nodeLabel");
     }
 
     @Test

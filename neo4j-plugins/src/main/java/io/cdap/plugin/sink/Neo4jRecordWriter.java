@@ -38,11 +38,13 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, Structured
     private final Session session;
     private final Neo4jDataService dataService;
     private final List<RelationDto> relationDtoList;
+    private final String nodeLabel;
 
-    public Neo4jRecordWriter(Session session, List<RelationDto> relationDtoList) {
+    public Neo4jRecordWriter(Session session, List<RelationDto> relationDtoList, String nodeLabel) {
         this.session = session;
         this.relationDtoList = relationDtoList;
         dataService = new Neo4jDataService(session);
+        this.nodeLabel = nodeLabel;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class Neo4jRecordWriter extends RecordWriter<StructuredRecord, Structured
                 LOG.error("Node with id {} was not updated", uid);
             }
         } else {
-            Node newNode = dataService.createNode(value, relationDtoList);
+            Node newNode = dataService.createNode(value, relationDtoList, nodeLabel);
             if (newNode == null) {
                 LOG.error("Node creation process has failed");
             }

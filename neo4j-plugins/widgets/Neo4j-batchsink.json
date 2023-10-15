@@ -90,6 +90,11 @@
           "widget-type": "textbox",
           "label": "Database Name",
           "name": "database"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Graph Label Name",
+          "name": "nodeLabel"
         }
       ]
     }

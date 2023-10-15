@@ -112,10 +112,10 @@ public class Neo4jDataService {
      * MERGE (b)<-[:BELONGS]-(m)
      * RETURN m
      */
-    public Node createNode(StructuredRecord input, List<RelationDto> relationDtoList) {
+    public Node createNode(StructuredRecord input, List<RelationDto> relationDtoList, String nodeLabel) {
         LOG.info("Create new node from");
         final String query = String.join(SPACE, String.join(SPACE, generateMatchStatements(input)),
-                generateMergeQuery(input),
+                generateMergeQuery(input, nodeLabel),
                 generateMergeRelations(relationDtoList),
                 "RETURN m");
         LOG.info(query);

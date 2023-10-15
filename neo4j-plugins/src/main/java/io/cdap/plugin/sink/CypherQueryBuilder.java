@@ -55,11 +55,17 @@ public class CypherQueryBuilder {
     private static final String COLON = ":";
     private static final String LEFT_RELATION = "<";
     private static final String RIGHT_RELATION = ">";
-    public static final String FIELD_METADATA = "metadata";
     public static final String FIELD_UID = "uid";
 
-    // MERGE (a)<-[:BELONGS]-(m)
+    /**
+     *
+     * @param relationDtoList
+     * @return query string in format MERGE (a)<-[:RELATION]-(m)
+     */
     public static String generateMergeRelations(List<RelationDto> relationDtoList) {
+        if (relationDtoList == null) {
+            return "";
+        }
         return relationDtoList.stream().map(relationDto -> {
             if (LEFT_RELATION.equals(relationDto.getDirection())) {
                 return String.join("",
@@ -124,11 +130,10 @@ public class CypherQueryBuilder {
         return matchStatements;
     }
 
-    public static String generateMergeQuery(StructuredRecord input) {
+    public static String generateMergeQuery(StructuredRecord input, String nodeLabel) {
         Objects.requireNonNull(input.getSchema());
         Objects.requireNonNull(input.getSchema().getFields());
-        Object metadata = input.get(FIELD_METADATA);
-        StringBuilder queryBuilder = new StringBuilder("MERGE (m:" + metadata + " {");
+        StringBuilder queryBuilder = new StringBuilder("MERGE (m:" + nodeLabel + " {");
         List<String> ownProperties = new ArrayList<>();
         for (Schema.Field field : input.getSchema().getFields()) {
             LOG.info("Field: {}", field.toString());

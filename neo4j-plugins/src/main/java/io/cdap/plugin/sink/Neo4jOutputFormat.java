@@ -19,7 +19,6 @@ package io.cdap.plugin.sink;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.plugin.sink.objects.RelationDto;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -32,11 +31,11 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.NODE_LABEL;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
 import static io.cdap.plugin.common.Neo4jConstants.RELATIONS;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
@@ -52,7 +51,8 @@ public class Neo4jOutputFormat extends OutputFormat<StructuredRecord, Structured
     @Override
     public RecordWriter<StructuredRecord, StructuredRecord> getRecordWriter(TaskAttemptContext taskAttemptContext) {
         Configuration configuration = taskAttemptContext.getConfiguration();
-        return new Neo4jRecordWriter(getSession(configuration), getRelationDtoList(configuration));
+        return new Neo4jRecordWriter(getSession(configuration), getRelationDtoList(configuration),
+                configuration.get(NODE_LABEL));
     }
 
     @Override
@@ -71,7 +71,11 @@ public class Neo4jOutputFormat extends OutputFormat<StructuredRecord, Structured
 
     private List<RelationDto> getRelationDtoList(Configuration configuration) {
         String relationsStr = configuration.get(RELATIONS);
-        return RelationUtils.deserializeList(relationsStr);
+        if (relationsStr != null) {
+            return RelationUtils.deserializeList(relationsStr);
+        } else {
+            return null;
+        }
     }
 
     @Override

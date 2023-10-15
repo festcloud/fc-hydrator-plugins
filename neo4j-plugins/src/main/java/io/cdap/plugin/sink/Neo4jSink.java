@@ -42,10 +42,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.NODE_LABEL;
 import static io.cdap.plugin.common.Neo4jConstants.PASSWORD;
 import static io.cdap.plugin.common.Neo4jConstants.RELATIONS;
 import static io.cdap.plugin.common.Neo4jConstants.URL;
@@ -86,7 +86,6 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
         FailureCollector collector = context.getFailureCollector();
         Schema inputSchema = context.getInputSchema();
         config.validate(collector, getRecordNames(inputSchema));
-        //relations = config.getRelations(getRecordNames(inputSchema));
         collector.getOrThrowException();
         context.addOutput(Output.of(config.getReferenceName(), new Neo4jOutputFormatProvider(config)));
     }
@@ -99,19 +98,17 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
     }
 
     private List<String> getRecordNames(Schema inputSchema) {
-        if (inputSchema == null){
+        if (inputSchema == null || inputSchema.getFields() == null){
             return new ArrayList<>();
         }
-        /*List<String> recordNames = new ArrayList<>();
-        List<Field> fields = inputSchema.getFields();
-        for (Field field : fields) {
-            if (Schema.Type.RECORD == field.getSchema().getType()) {
-                recordNames.add(field.getName());
-            }
-        }
-        return recordNames;*/
-        // TODO: add handling all types like records, unions, arrays. The metadata filed value has to be taken here
         return inputSchema.getFields().stream()
+                .filter(field -> {
+                    if (Schema.Type.UNION.equals(field.getSchema().getType())) {
+                        return Schema.Type.RECORD.equals(field.getSchema().getNonNullable().getType());
+                    } else {
+                        return Schema.Type.RECORD.equals(field.getSchema().getType());
+                    }
+                })
                 .map(Field::getName)
                 .collect(Collectors.toList());
     }
@@ -136,7 +133,10 @@ public class Neo4jSink extends ReferenceBatchSink<StructuredRecord, StructuredRe
             configMap.put(PASSWORD, config.getPassword());
             configMap.put(DATABASE, config.getDatabase());
             List<RelationDto> relations = config.getRelations();
-            configMap.put(RELATIONS, RelationUtils.serialize(relations));
+            if (relations != null) {
+                configMap.put(RELATIONS, RelationUtils.serialize(relations));
+            }
+            configMap.put(NODE_LABEL, config.getNodeLabel());
             return configMap;
         }
     }

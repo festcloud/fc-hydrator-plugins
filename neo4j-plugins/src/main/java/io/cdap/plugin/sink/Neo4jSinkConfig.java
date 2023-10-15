@@ -38,6 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
+import static io.cdap.plugin.common.Neo4jConstants.NODE_LABEL;
 import static io.cdap.plugin.common.Neo4jConstants.RELATIONS;
 
 /**
@@ -66,9 +67,14 @@ public class Neo4jSinkConfig extends PluginConfig {
 
     @Name(RELATIONS)
     @Macro
+    @Nullable
     @Description("Aggregates to compute on grouped records. ")
     private String relations;
 
+    @Name(NODE_LABEL)
+    @Macro
+    @Description("Label that has to be assigned to particular store")
+    private String nodeLabel;
 
     public void validate(FailureCollector collector, List<String> allowedElements) {
         IdUtils.validateReferenceName(referenceName, collector);
@@ -81,10 +87,10 @@ public class Neo4jSinkConfig extends PluginConfig {
     }
 
     public List<RelationDto> getRelations() {
-        List<RelationDto> result = new ArrayList<>();
         if (containsMacro(RELATIONS) || Strings.isNullOrEmpty(relations)) {
-            return result;
+            return null;
         }
+        List<RelationDto> result = new ArrayList<>();
         Set<String> relationsName = new HashSet<>();
         String regex = "^(.+):([><])\\((.+)\\)$";
         Pattern pattern = Pattern.compile(regex);
@@ -141,5 +147,9 @@ public class Neo4jSinkConfig extends PluginConfig {
 
     public String getDatabase() {
         return database;
+    }
+
+    public String getNodeLabel() {
+        return nodeLabel;
     }
 }
