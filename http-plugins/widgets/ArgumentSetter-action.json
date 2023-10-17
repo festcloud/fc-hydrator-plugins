@@ -144,6 +144,10 @@
               {
                 "id": "customMapping",
                 "label": "Custom Mapping"
+              },
+              {
+                "id": "void",
+                "label": "Void"
               }
             ]
           }

@@ -94,6 +94,9 @@ public class HTTPArgumentSetter extends Action {
         break;
       case STANDARD:
         HTTPArgumentSetterResponseParser.standardParser(context, body, config);
+        break;
+      case VOID:
+        // do nothing
     }
   }
 
