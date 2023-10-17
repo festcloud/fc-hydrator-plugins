@@ -159,6 +159,8 @@ public class HTTPArgumentSetterConfig extends HTTPConfig {
           assertIsSet(getMapping(), NAME_MAPPING, reasonCustomMapping);
         }
         break;
+      case VOID:
+        // do nothing
     }
   }
 

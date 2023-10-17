@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
 
 public enum MappingType {
   STANDARD("none"),
-  CUSTOM_MAPPING("customMapping");
+  CUSTOM_MAPPING("customMapping"),
+  VOID("void");
 
   private final String value;
 
