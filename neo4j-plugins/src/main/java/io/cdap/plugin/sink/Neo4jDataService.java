@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static io.cdap.plugin.sink.CypherQueryBuilder.generateMatchStatements;
 import static io.cdap.plugin.sink.CypherQueryBuilder.generateMergeQuery;
@@ -41,11 +42,14 @@ public class Neo4jDataService {
     private static final Logger LOG = LoggerFactory.getLogger(Neo4jDataService.class);
     private static final String EQUAL = "=";
     private static final String SPACE = " ";
+    private static final String NOT_VALID_UID = "0([-.]?0+)*";
+    private final Pattern zeroUid;
 
     private final Session session;
 
     public Neo4jDataService(Session session) {
         this.session = session;
+        this.zeroUid = Pattern.compile(NOT_VALID_UID);
     }
 
     /**
@@ -57,6 +61,9 @@ public class Neo4jDataService {
      * @return Node by unique identifier or null if no Node found or if more than one Node was returned
      */
     public Record getUniqueNodeByProperty(String propertyName, String propertyValue) {
+        if (zeroUid.matcher(propertyValue).matches()) {
+            return null;
+        }
         String query = "MATCH (n {" + propertyName + ": '" + propertyValue + "'}) RETURN n";
         LOG.info(query);
         Result result = session.run(query);

@@ -125,6 +125,13 @@ public class Neo4jDataServiceTest {
 
     @Test
     @Ignore
+    public void testGetNodeByNotValidUid() {
+        Record id = dataService.getUniqueNodeByProperty("id", "00000-000-000");
+        Assert.assertNull(id);
+    }
+
+    @Test
+    @Ignore
     public void updateNode() throws IOException {
         StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_SCHEMA.toString()))
                 .set("Metadata", "Holding")
