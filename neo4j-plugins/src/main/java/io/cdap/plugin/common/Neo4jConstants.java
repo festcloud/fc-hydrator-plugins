@@ -25,6 +25,7 @@ public interface Neo4jConstants {
     String PASSWORD = "password";
     String DATABASE = "database";
     String COLUM_NAME = "columName";
+    String SKIP_VALUE = "skipValue";
     String RELATIONS = "relations";
     String NODE_LABEL = "nodeLabel";
     String SCHEMA = "schema";

@@ -22,12 +22,7 @@ import io.cdap.cdap.api.annotation.Plugin;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
-import io.cdap.cdap.etl.api.Emitter;
-import io.cdap.cdap.etl.api.FailureCollector;
-import io.cdap.cdap.etl.api.InvalidEntry;
-import io.cdap.cdap.etl.api.PipelineConfigurer;
-import io.cdap.cdap.etl.api.Transform;
-import io.cdap.cdap.etl.api.TransformContext;
+import io.cdap.cdap.etl.api.*;
 import io.cdap.plugin.common.ConfigUtil;
 import io.cdap.plugin.connector.Neo4jConnectorConfig;
 import io.cdap.plugin.sink.Neo4jDataService;
@@ -46,9 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static io.cdap.plugin.common.Neo4jConstants.COLUM_NAME;
-import static io.cdap.plugin.common.Neo4jConstants.DATABASE;
-import static io.cdap.plugin.common.Neo4jConstants.SCHEMA;
+import static io.cdap.plugin.common.Neo4jConstants.*;
 
 /**
  * MdmLookup plugin to verify if data present in MDM.
@@ -64,6 +57,7 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
     private final LookupConfig config;
     private Neo4jDataService dataService;
     private String lookupColumn;
+    private String skipValidating;
     private Driver driver;
     private Schema outSchema;
 
@@ -96,7 +90,7 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
                     return ids.stream();
                 })
                 .filter(Objects::nonNull)
-                .filter(uid -> dataService.getUniqueNodeByProperty(lookupColumn, uid) == null)
+                .filter(this :: isNotPresentInMdm)
                 .peek(uid -> {
                     LOG.info("Integrity validation failed for: {}", uid);
                     emitter.emitError(new InvalidEntry<>(ERROR_CODE, uid, input));
@@ -107,6 +101,10 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
             LOG.info("Integrity validation passed");
             emitter.emit(input);
         }
+    }
+
+    private boolean isNotPresentInMdm(String uid) {
+        return uid.equals(skipValidating) || dataService.getUniqueNodeByProperty(lookupColumn, uid) == null;
     }
 
     private String getIdValue(StructuredRecord input, Schema.Field field) {
@@ -130,6 +128,7 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
     public void initialize(TransformContext context) throws Exception {
         super.initialize(context);
         lookupColumn = config.getColumName();
+        skipValidating = config.getSkipValue();
         LOG.info("Init connection to MDM database");
         driver = GraphDatabase.driver(config.getDatabaseURI(),
             AuthTokens.basic(config.getUserName(), config.getUserPassword()));
@@ -142,10 +141,10 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
      * Destroy plugin and close Neo4j connection.
      */
     @Override
-    public void destroy() {
+    public void onRunFinish(boolean succeeded, StageSubmitterContext context) {
         LOG.info("Close connection to MDM database.");
         driver.close();
-        super.destroy();
+        super.onRunFinish(succeeded, context);
     }
 
     /**
@@ -168,6 +167,12 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
         @Description("Any uniq identifier you would like to validate in MDM")
         @Macro
         private String columName;
+
+        @Name(SKIP_VALUE)
+        @Nullable
+        @Description("Skip validating for value.")
+        @Macro
+        private String skipValue;
 
         @Name(DATABASE)
         @Description("Database name to connect to")
@@ -201,6 +206,10 @@ public class MdmLookupTransformer extends Transform<StructuredRecord, Structured
 
         public String getDatabase() {
             return database;
+        }
+
+        public String getSkipValue() {
+            return skipValue;
         }
     }
 

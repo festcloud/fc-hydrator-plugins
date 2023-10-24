@@ -51,6 +51,11 @@
                     "widget-type": "textbox",
                     "label": "Any uniq identifier we’d like to validate in MDM",
                     "name": "columName"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Skip validating for value",
+                    "name": "skipValue"
                 }
             ]
         }
