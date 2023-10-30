@@ -163,8 +163,11 @@ public class CypherQueryBuilder {
         } else {
             if (Schema.Type.STRING.equals(type)) {
                 return subQuery + "'" + dataField + "'";
-            } else {
+            } else if (type.isSimpleType()) {
                 return subQuery + dataField;
+            } else {
+                LOG.info("{} was skipped", field.getName());
+                return "";
             }
         }
     }

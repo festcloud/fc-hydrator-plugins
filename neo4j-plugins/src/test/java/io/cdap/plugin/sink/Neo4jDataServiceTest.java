@@ -126,11 +126,16 @@ public class Neo4jDataServiceTest {
     @Test
     @Ignore
     public void updateNode() throws IOException {
-        StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_SCHEMA.toString()))
-                .set("Metadata", "Holding")
-                .set("UID", "345jkj-mn3n45-34m5n34")
-                .set("Name", "")
-                .set("IsSomething", false)
+        StructuredRecord inner = StructuredRecord.builder(Schema.parseJson(INNER_SCHEMA_ENG.toString()))
+                .set("metadata", "Холдинг")
+                .set("uid", "1111111111")
+                .build();
+        StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
+                .set("metadata", "Holding")
+                .set("uid", "345jkj-mn3n45-34m5n34")
+                .set("name", "")
+                .set("isSomething", false)
+                .set("holding", inner)
                 .build();
         dataService.updateNode("UID", "345jkj-mn3n45-34m5n34", input);
     }
