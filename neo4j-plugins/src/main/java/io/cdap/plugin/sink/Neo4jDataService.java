@@ -100,8 +100,13 @@ public class Neo4jDataService {
         String query = queryBuilder.toString();
         LOG.info(query);
         return session.writeTransaction(tx -> {
-            Result result = tx.run(query);
-            return result.single().get(0).asNode();
+            try {
+                Result result = tx.run(query);
+                return result.single().get(0).asNode();
+            } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
+                return null;
+            }
         });
     }
 
