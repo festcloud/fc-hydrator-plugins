@@ -87,12 +87,13 @@ public class Neo4jDataService {
             if (field.getSchema().getType().isSimpleType()) {
                 queryBuilder.append(" SET m.");
                 queryBuilder.append(
-                        processPropertyIntoQuery(input, field, field.getSchema().getType(), EQUAL, true));
-            } else if (Schema.Type.UNION.equals(field.getSchema().getType())) {
+                        processPropertyIntoQuery(input, field, field.getSchema().getType(), EQUAL, false));
+            } else if (Schema.Type.UNION.equals(field.getSchema().getType())
+                    && field.getSchema().getNonNullable().getType().isSimpleType()) {
                 queryBuilder.append(" SET m.");
                 queryBuilder.append(
                         processPropertyIntoQuery(input, field, field.getSchema().getNonNullable().getType(),
-                                EQUAL, true));
+                                EQUAL, false));
             }
         }
         queryBuilder.append(" RETURN m");

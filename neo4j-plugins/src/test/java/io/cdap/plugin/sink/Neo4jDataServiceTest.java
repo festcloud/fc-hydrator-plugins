@@ -78,6 +78,18 @@ public class Neo4jDataServiceTest {
             Schema.Field.of("isSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
                     Schema.of(Schema.Type.BOOLEAN))));
 
+    private static final Schema BODY_WITH_CHILD_UNION_SCHEMA = Schema.recordOf(
+            "Dictionary",
+            Schema.Field.of("metadata", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("uid", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("name", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.STRING))),
+            Schema.Field.of("holding", Schema.unionOf(Schema.of(Schema.Type.NULL), INNER_SCHEMA_ENG)),
+            Schema.Field.of("isSomething", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                    Schema.of(Schema.Type.BOOLEAN))));
+
     @Test
     @Ignore
     public void createNode() throws IOException {
@@ -130,7 +142,7 @@ public class Neo4jDataServiceTest {
                 .set("metadata", "Холдинг")
                 .set("uid", "1111111111")
                 .build();
-        StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_SCHEMA.toString()))
+        StructuredRecord input = StructuredRecord.builder(Schema.parseJson(BODY_WITH_CHILD_UNION_SCHEMA.toString()))
                 .set("metadata", "Holding")
                 .set("uid", "345jkj-mn3n45-34m5n34")
                 .set("name", "")
