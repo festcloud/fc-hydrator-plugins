@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "spec-version": "1.5"
+  },
+  "display-name": "Neo4j",
+  "configuration-groups": [
+    {
+      "label": "Connection",
+      "properties": [
+        {
+          "widget-type": "toggle",
+          "label": "Use connection",
+          "name": "useConnection",
+          "widget-attributes": {
+            "on": {
+              "value": "true",
+              "label": "YES"
+            },
+            "off": {
+              "value": "false",
+              "label": "NO"
+            },
+            "default": "false"
+          }
+        },
+        {
+          "widget-type": "connection-select",
+          "label": "Connection select ",
+          "name": "connection"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Neo4j URI",
+          "name": "url"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Neo4j user name",
+          "name": "user"
+        },
+        {
+          "widget-type": "password",
+          "label": "Neo4j user password",
+          "name": "password"
+        }
+      ]
+    },
+    {
+      "label": "Relations",
+      "properties": [
+        {
+          "widget-type": "function-dropdown-with-alias",
+          "label": "Relations",
+          "name": "relations",
+          "widget-attributes": {
+            "placeholders": {
+              "field": "ElementName",
+              "alias": "direction",
+              "condition": "Relation name"
+            },
+            "dropdownOptions": [
+              ">",
+              "<"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "Reference Name",
+          "name": "referenceName",
+          "widget-attributes": {
+            "placeholder": "Name used to identify this source for lineage. Typically, the name of the table/view."
+          }
+        },
+        {
+          "label": "browse",
+          "widget-type": "connection-browser",
+          "widget-category": "plugin",
+          "widget-attributes": {
+            "connectionType": "Neo4j",
+            "label": "Browse"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Database Name",
+          "name": "database"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Graph Label Name",
+          "name": "nodeLabel"
+        }
+      ]
+    }
+  ],
+  "outputs": [],
+  "filters": [
+    {
+      "name": "showConnectionProperties ",
+      "condition": {
+        "expression": "useConnection == false"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "url"
+        },
+        {
+          "type": "property",
+          "name": "user"
+        },
+        {
+          "type": "property",
+          "name": "password"
+        }
+      ]
+    },
+    {
+      "name": "showConnectionId",
+      "condition": {
+        "expression": "useConnection == true"
+      },
+      "show": [
+        {
+          "type": "property",
+          "name": "connection"
+        }
+      ]
+    }
+  ],
+  "jump-config": {
+    "datasets": [
+      {
+        "ref-property-name": "referenceName"
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+    "metadata": {
+        "spec-version": "1.5"
+    },
+    "configuration-groups": [
+        {
+            "label": "MDM lookup Configuration",
+            "properties": [
+                {
+                    "widget-type": "toggle",
+                    "label": "Use connection",
+                    "name": "useConnection",
+                    "widget-attributes": {
+                        "on": {
+                            "value": "true",
+                            "label": "YES"
+                        },
+                        "off": {
+                            "value": "false",
+                            "label": "NO"
+                        },
+                        "default": "false"
+                    }
+                },
+                {
+                    "widget-type": "connection-select",
+                    "label": "Connection select ",
+                    "name": "connection"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Neo4j user name",
+                    "name": "user"
+                },
+                {
+                    "widget-type": "password",
+                    "label": "Neo4j user password",
+                    "name": "password"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Neo4j URI",
+                    "name": "url"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Database Name",
+                    "name": "database"
+                },
+                {
+                    "widget-type": "textbox",
+                    "label": "Any uniq identifier we’d like to validate in MDM",
+                    "name": "columName"
+                }
+            ]
+        }
+    ],
+    "filters": [
+        {
+            "name": "showConnectionProperties ",
+            "condition": {
+                "expression": "useConnection == false"
+            },
+            "show": [
+                {
+                    "type": "property",
+                    "name": "url"
+                },
+                {
+                    "type": "property",
+                    "name": "user"
+                },
+                {
+                    "type": "property",
+                    "name": "password"
+                }
+            ]
+        },
+        {
+            "name": "showConnectionId",
+            "condition": {
+                "expression": "useConnection == true"
+            },
+            "show": [
+                {
+                    "type": "property",
+                    "name": "connection"
+                }
+            ]
+        }
+    ],
+    "outputs": [
+        {
+            "name": "schema",
+            "widget-type": "schema",
+            "widget-attributes": {
+                "schema-types": [
+                    "boolean",
+                    "bytes",
+                    "int",
+                    "long",
+                    "float",
+                    "double",
+                    "string",
+                    "map<string, string>"
+                ],
+                "schema-default-type": "string"
+            }
+        }
+    ],
+    "emit-errors": true
+}
