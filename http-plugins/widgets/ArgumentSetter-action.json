@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "spec-version": "1.5"
+  },
+  "display-name": "Argument Setter",
+  "configuration-groups": [
+    {
+      "label": "Basic",
+      "properties": [
+        {
+          "widget-type": "textbox",
+          "label": "URL",
+          "name": "url"
+        }
+      ]
+    },
+    {
+      "label": "Advanced",
+      "properties": [
+        {
+          "widget-type": "select",
+          "label": "HTTP Method",
+          "name": "method",
+          "widget-attributes": {
+            "values": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "default": "GET"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Request Body",
+          "name": "body"
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Connection Timeout (milliseconds)",
+          "name": "connectTimeout",
+          "widget-attributes": {
+            "default": "60000"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Read Timeout (milliseconds)",
+          "name": "readTimeout",
+          "widget-attributes": {
+            "default": "60000"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Number of Retries",
+          "name": "numRetries",
+          "widget-attributes": {
+            "default": "0"
+          }
+        },
+        {
+          "widget-type": "toggle",
+          "label": "Follow Redirects",
+          "name": "followRedirects",
+          "widget-attributes": {
+            "on": {
+              "value": "true",
+              "label": "Yes"
+            },
+            "off": {
+              "value": "false",
+              "label": "No"
+            },
+            "default": "true"
+          }
+        },
+        {
+          "widget-type": "keyvalue",
+          "label": "Request Headers",
+          "name": "requestHeaders",
+          "widget-attributes": {
+            "showDelimiter": "false",
+            "kv-delimiter": ":",
+            "delimiter": ";"
+          }
+        },
+        {
+        }
+      ]
+    },
+    {
+      "label": "Authentication",
+      "properties": [
+        {
+          "widget-type": "radio-group",
+          "label": "Authentication Type",
+          "name": "authType",
+          "widget-attributes": {
+            "layout": "inline",
+            "default": "none",
+            "options": [
+              {
+                "id": "none",
+                "label": "None"
+              },
+              {
+                "id": "basicAuth",
+                "label": "Basic Authentication"
+              }
+            ]
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Username",
+          "name": "username"
+        },
+        {
+          "widget-type": "password",
+          "label": "Password",
+          "name": "password"
+        }
+      ]
+    },
+    {
+      "label": "Mapping",
+      "properties": [
+        {
+          "widget-type": "radio-group",
+          "label": "Mapping Type",
+          "name": "mappingType",
+          "widget-attributes": {
+            "layout": "inline",
+            "default": "none",
+            "options": [
+              {
+                "id": "none",
+                "label": "Standard"
+              },
+              {
+                "id": "customMapping",
+                "label": "Custom Mapping"
+              }
+            ]
+          }
+        },
+        {
+          "widget-type": "keyvalue",
+          "label": "Json Path Mappings",
+          "name": "mapping",
+          "widget-attributes": {
+            "showDelimiter": "false",
+            "key-placeholder": "Result variable name",
+            "value-placeholder": "JsonPath value"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": [],
+  "filters": [
+    {
+      "name": "Authenticate with Basic Auth",
+      "condition": {
+        "property": "authType",
+        "operator": "equal to",
+        "value": "basicAuth"
+      },
+      "show": [
+        {
+          "name": "username",
+          "type": "property"
+        },
+        {
+          "name": "password",
+          "type": "property"
+        }
+      ]
+    },
+    {
+      "name": "Mapping type",
+      "condition": {
+        "property": "mappingType",
+        "operator": "equal to",
+        "value": "customMapping"
+      },
+      "show": [
+        {
+          "name": "mapping",
+          "type": "property"
+        }
+      ]
+    }
+  ]
+}
