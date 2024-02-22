@@ -2,8 +2,6 @@ pipeline {
     environment {
         // Define environment variables
         LOCATION = 'europe-west4'
-        PROJECT = 'gcp-lab-datafusion-poc'
-        CUSTOMER = 'fest'
         ARTIFACT = 'http-plugins'
         Green = '\033[0;32m'
         IPurple = '\033[0;95m'
@@ -12,6 +10,7 @@ pipeline {
         On_Cyan='\033[46m'
         Color_Off = '\033[0m'
         REPO = 'fc-hydrator-plugins'
+        MAVEN_CACHE_BUCKET = 'gs://gcp-srv-nprd-mvn-cache'
     }
     agent any
 
@@ -163,6 +162,10 @@ def testFolder() {
 // Build logic for a specific folder
 def buildFolder() {
     ansiColor('xterm') {
+        sh 'pwd'
+        sh 'ls -la'
+        sh 'ls -la /home/jenkins/agent/workspace/test-hydrator-plugins/fc-hydrator-plugins'
+        sh 'echo "REPO REPO REPO"'
         // Maven build commands
         sh """
         set +x
