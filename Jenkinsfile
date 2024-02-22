@@ -2,8 +2,6 @@ pipeline {
     environment {
         // Define environment variables
         LOCATION = 'europe-west4'
-        PROJECT = 'gcp-lab-datafusion-poc'
-        CUSTOMER = 'fest'
         ARTIFACT = 'http-plugins'
         Green = '\033[0;32m'
         IPurple = '\033[0;95m'
