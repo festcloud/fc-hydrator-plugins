@@ -114,7 +114,6 @@ def buildAndDeploy() {
             }
         }
         container('maven') {
-            downloadMavenCache()
             testFolder()
         }
     }
@@ -126,7 +125,6 @@ def buildAndDeploy() {
         }
         container('maven') {
             unstash 'repo-contents'
-            downloadMavenCache()
             buildFolder()
         }
     }
