@@ -65,15 +65,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                success {
-                    script {
-                        container('maven') {
-                            updateMavenCache()
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -126,6 +117,7 @@ def buildAndDeploy() {
             downloadMavenCache()
             testFolder()
         }
+    }
     stage("Build ${ARTIFACT} plugins") {
         agent {
             kubernetes {
