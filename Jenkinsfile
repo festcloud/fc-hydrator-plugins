@@ -10,7 +10,6 @@ pipeline {
         On_Cyan='\033[46m'
         Color_Off = '\033[0m'
         REPO = 'fc-hydrator-plugins'
-        MAVEN_CACHE_BUCKET = 'gs://gcp-srv-nprd-mvn-cache'
     }
     agent any
 
@@ -162,10 +161,6 @@ def testFolder() {
 // Build logic for a specific folder
 def buildFolder() {
     ansiColor('xterm') {
-        sh 'pwd'
-        sh 'ls -la'
-        sh 'ls -la /home/jenkins/agent/workspace/test-hydrator-plugins/fc-hydrator-plugins'
-        sh 'echo "REPO REPO REPO"'
         // Maven build commands
         sh """
         set +x
