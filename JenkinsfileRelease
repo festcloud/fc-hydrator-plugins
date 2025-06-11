@@ -1,0 +1,2 @@
+@Library(['shared-lib-common', 'shared-lib-maven']) _
+buildReleaseFlowMaven(gitRepo: "fc-hydrator-plugins", isPlugin: true)
