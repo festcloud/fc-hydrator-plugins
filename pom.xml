@@ -1046,11 +1046,13 @@
     <profile>
       <!-- Profile to include submodules -->
       <id>submodules</id>
+<!--
       <activation>
         <jdk>[1.8,)</jdk>
-        <!-- Active by default unless it's a cloud build -->
+        &lt;!&ndash; Active by default unless it's a cloud build &ndash;&gt;
         <property><name>!cloudBuild</name></property>
       </activation>
+-->
       <modules>
         <module>wrangler-transform</module>
         <module>google-cloud</module>
